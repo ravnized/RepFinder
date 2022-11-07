@@ -6,6 +6,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import ScraperDao from "./scraper";
+
 const app = express();
 declare var process: {
 	env: {
@@ -22,11 +23,16 @@ mongoClient
 		console.error(err.stack);
 	})
 	.then(async (connection: any) => {
-		await ScraperDao.scraperTest();
-		app.listen(5001, () => console.log("Server started on port 5001"));
+		const server = app.listen(8080, () => {
+			console.log(`server started on port 8080`);
+		});
+		server.keepAliveTimeout = 61 * 1000;
+		server.headersTimeout = 65 * 1000;
+		await ScraperDao.getResponseData("http://chaosmade.x.yupoo.com/");
 	});
 
 app.use(cors());
 
 app.use(bodyParser.json());
 app.use(cookieParser());
+
