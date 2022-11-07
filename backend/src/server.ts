@@ -28,7 +28,7 @@ mongoClient
 		});
 		server.keepAliveTimeout = 61 * 1000;
 		server.headersTimeout = 65 * 1000;
-		await ScraperDao.getResponseData("http://chaosmade.x.yupoo.com/");
+		await ScraperDao.getResponseData("");
 	});
 
 app.use(cors());

@@ -10,14 +10,16 @@ export default class ScraperDao {
         try {
             axios.get(url).then((response) => {
                 console.log("got response")
+                /*
                 let $ = cheerio.load(response.data);
                 if ($('.pagination__active').next().text() !== "...") {
                     let urlNext = $('.pagination__active').next().attr('href');
                     urlNext = urlNext.slice(1, urlNext.lenght);
+                    console.log(`url next: ${urlNext}`)
                     console.log(url + urlNext)
                     this.getResponseData(url + urlNext);
                 }
-
+                */
             })
         } catch (error) {
             console.log(error);
