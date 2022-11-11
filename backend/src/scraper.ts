@@ -1,29 +1,44 @@
 import axios from "axios";
-import fs from "fs";
-import fetch from "node-fetch";
+const fs = require("fs")
 const cheerio = require("cheerio")
 
 export default class ScraperDao {
+    static finalFile = "";
+    static currentPage = 1;
+    static async getResponseData(url: string, filename: string) {
+
+        return axios.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then((response) => {
+            console.log("got response")
+
+            let $ = cheerio.load(response.data);
+            let pagination__active_next = $('.pagination__active').next();
+            let pageMax = $('input[name=page]').attr('max');
+            let urlMod = ""
+            console.log(pagination__active_next.text())
+            if (ScraperDao.currentPage < pageMax) {
+                ScraperDao.finalFile += $('.showindex__parent').html();
+                console.log(url)
+                urlMod = url.slice(0, url.length - 1)
+                console.log(urlMod)
+                delete response.data;
+                ScraperDao.currentPage++;
+                ScraperDao.getResponseData(urlMod + ScraperDao.currentPage, filename);
+            } else {
+                console.log(ScraperDao.finalFile)
+            }
+
+        }).catch((err) => {
+            console.log(err)
+            ScraperDao.getResponseData(url, filename)
+        })
 
 
-    static async getResponseData(url: string) {
-        try {
-            axios.get(url).then((response) => {
-                console.log("got response")
-                /*
-                let $ = cheerio.load(response.data);
-                if ($('.pagination__active').next().text() !== "...") {
-                    let urlNext = $('.pagination__active').next().attr('href');
-                    urlNext = urlNext.slice(1, urlNext.lenght);
-                    console.log(`url next: ${urlNext}`)
-                    console.log(url + urlNext)
-                    this.getResponseData(url + urlNext);
-                }
-                */
-            })
-        } catch (error) {
-            console.log(error);
-        }
+
+
 
     }
 

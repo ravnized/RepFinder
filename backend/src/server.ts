@@ -26,9 +26,8 @@ mongoClient
 		const server = app.listen(8080, () => {
 			console.log(`server started on port 8080`);
 		});
-		server.keepAliveTimeout = 61 * 1000;
-		server.headersTimeout = 65 * 1000;
-		await ScraperDao.getResponseData("");
+		await ScraperDao.getResponseData("http://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
+
 	});
 
 app.use(cors());
