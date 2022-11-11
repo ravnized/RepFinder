@@ -18,6 +18,7 @@ export default class ScraperController {
     static finalFile = "";
     static currentPage = 1;
     static urlMod = "";
+    static costReg = new RegExp('/\d{1,}', 'g');
     getResponseData(url: string, filename: string) {
         axios.interceptors.request.use(request => {
             console.log('Starting Request', JSON.stringify(request, null, 2))
@@ -63,11 +64,17 @@ export default class ScraperController {
     }
 
     static async converFileToItems(filename: string) {
-        const $ = cheerio.load(fs.readFileSync(filename));
+        const $ = cheerio.load(fs.readFileSync(`./cache/${filename}.txt`));
 
         $('.album3__title').each((index: number, item: any) => {
-            console.log(`index: ${index}`);
-            console.log(`item: ${item.text()}`);
+            console.log(`item: ${$(item).text()}`);
+            let cost = $(item).text();
+            let matches = cost.matchAll(this.costReg)
+
+            console.log(matches)
+            console.log(matches.RegExp)
+
+
         })
     }
 

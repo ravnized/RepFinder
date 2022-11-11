@@ -23,9 +23,7 @@ mongoClient
 		console.error(err.stack);
 	})
 	.then(async (connection: any) => {
-		const server = app.listen(8080, () => {
-			console.log(`server started on port 8080`);
-		});
+		app.listen(8000, () => console.log("Server started on port 8000"));
 		await ScraperDao.connDB(connection);
 		//let scraper = new ScraperDao();
 		//await scraper.getResponseData("https://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
@@ -41,3 +39,6 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.use("/api/v1/items", scraperRoutes);
+app.use("*", (req, res) => {
+	res.status(404).json({ error: "not found" });
+});
