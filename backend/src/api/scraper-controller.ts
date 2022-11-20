@@ -18,7 +18,7 @@ export default class ScraperController {
     static finalFile = "";
     static currentPage = 1;
     static urlMod = "";
-    static costReg = new RegExp('/\d{1,}', 'g');
+
     getResponseData(url: string, filename: string) {
         axios.interceptors.request.use(request => {
             console.log('Starting Request', JSON.stringify(request, null, 2))
@@ -63,57 +63,87 @@ export default class ScraperController {
 
     }
 
-    static async converFileToItems(filename: string) {
+    static async converFileToItems(filename: string, req: any, res: any, next: any) {
+        let responseTotalDebug = "";
+        let responseTotal: any[] = [];
+        let indexAddedItems = 0
         const $ = cheerio.load(fs.readFileSync(`./cache/${filename}.txt`));
+        $('.album3__main').each((index: number, item: any) => {
+            let title = $(item).attr("title");
+            //console.log(title);
+            var regex = new RegExp("\\d{1,}");
+            let array = regex.exec(title)
+            if (array == null) {
+                return;
+            }
+            //console.log(`Cost of the item: ${array![0]} yuan`);
+            let prezzoRegex = new RegExp("[^￥🔥](?<!\\d)(?<!\\s)\\D+", 'gi');
+            let titleFinal = prezzoRegex.exec(title)
+            if (titleFinal == null) {
+                return;
+            }
+            let arrayPhoto: any[] = [];
+            let albumImgWrap = $(item).find('.album3__squareWrap img').each((index: number, item: any) => {
+                let photo = $(item);
+                let linkPhoto = photo.attr("data-origin-src");
+                linkPhoto = "https:" + linkPhoto;
+                let photoTitle = photo.attr("title");
+                arrayPhoto[index] = linkPhoto;
+                //console.log(linkPhoto);
+            })
 
-        $('.album3__title').each((index: number, item: any) => {
-            console.log(`item: ${$(item).text()}`);
-            let cost = $(item).text();
-            let matches = cost.matchAll(this.costReg)
-
-            console.log(matches)
-            console.log(matches.RegExp)
-
-
+            let response = {
+                itemName: titleFinal![0],
+                cost: Number(array![0]),
+                images: arrayPhoto,
+                storeName: filename,
+            }
+            responseTotal[indexAddedItems] = response;
+            indexAddedItems++;
+            responseTotalDebug += `Inserting ${response.itemName}, cost: ${response.cost}, images: ${arrayPhoto.toString()} storeName: ${filename} \n`;
         })
+        fs.writeFileSync(`log-${filename}.txt`, responseTotalDebug)
+
+        this.apiInsertItems(req, res, next, responseTotal)
+
     }
 
 
 
     static async apiGetItem(req: any, res: any, next: any) {
-        const ordersPerPage = req.query.ordersPerPage
-            ? parseInt(req.query.ordersPerPage, 10)
+        const itemsPerPage = req.query.itemsPerPage
+            ? parseInt(req.query.itemsPerPage, 10)
             : 20;
         const page = req.query.page ? parseInt(req.query.page, 10) : 0;
 
         let filters: any = {};
 
-        if (req.query.cost) {
-            filters.cost = parseFloat(req.query.cost);
+        if (req.body.cost) {
+            filters.cost = req.body.cost;
         }
 
-        if (req.query.itemName) {
-            filters.itemName = req.query.itemName;
+        if (req.body.itemName) {
+            filters.itemName = req.body.itemName;
         }
-        if (req.query.storeName) {
-            filters.storeName = req.query.storeName;
+        if (req.body.storeName) {
+            filters.storeName = req.body.storeName;
         }
 
-        console.error(req.query);
+        console.error(`request body: ${JSON.stringify(req.body)}`);
         console.error(filters);
 
-        const { itemList, totalItemList } = await ScraperDao.getItems({
+        let responseGetItems = await ScraperDao.getItems({
             filters,
             page,
-            ordersPerPage,
+            itemsPerPage,
         });
 
         let response = {
-            orders: itemList,
+            items: responseGetItems.itemsList,
             page: page,
             filters: filters,
-            entries_per_page: ordersPerPage,
-            total_results: totalItemList,
+            entries_per_page: itemsPerPage,
+            total_results: responseGetItems.totalItemsLIst,
         };
         res.json(response);
     }
@@ -121,7 +151,7 @@ export default class ScraperController {
     static async apiInsertItem(req: any, res: any, next: any) {
         let itemName = "",
             cost = 0,
-            image = "",
+            images: any,
             storeName = "";
         let insertItemResponse: any;
         let query: any = null;
@@ -133,13 +163,13 @@ export default class ScraperController {
 
         itemName = query.itemName;
         cost = query.cost;
-        image = query.image;
+        images = query.images;
         storeName = query.storeName;
         try {
             insertItemResponse = await ScraperDao.insertItem({
                 itemName: itemName,
                 cost: cost,
-                image: image,
+                images: images,
                 storeName: storeName,
             });
         } catch (e) {
@@ -149,6 +179,15 @@ export default class ScraperController {
         res.json(insertItemResponse);
     }
 
+    static async apiInsertItems(req: any, res: any, next: any, objectRetrived: Array<Object>) {
 
+        let insertItemsResponse: any;
+        try {
+            insertItemsResponse = await ScraperDao.insertItems(objectRetrived);
+        } catch (e) {
+            console.error(`Problem in inserting order ${e}`);
+        }
+        res.json(insertItemsResponse);
+    }
 
 }

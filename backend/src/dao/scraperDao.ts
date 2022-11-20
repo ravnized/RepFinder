@@ -3,8 +3,9 @@ let items: any;
 interface filtersArray {
     [key: string]: string | number;
 }
+import mongoose from "mongoose";
 export default class ScraperDao {
-    
+
 
     static async connDB(conn: any) {
         if (items) return;
@@ -19,18 +20,18 @@ export default class ScraperDao {
     static async getItems({
         filters = {} as filtersArray,
         page = 0,
-        ordersPerPage = 10,
+        itemsPerPage = 10,
     } = {}): Promise<any> {
         let itemName = "",
             cost = 0,
-            image = "",
+            images: any = [],
             storeName = "";
 
         try {
             let query: any = {
                 itemName,
                 cost,
-                image,
+                images,
                 storeName,
             }
 
@@ -40,28 +41,30 @@ export default class ScraperDao {
                     delete query[querySingle];
                 }
             }
-            console.error(query);
-
+            console.log(`requested query ${JSON.stringify(query)}`);
+            //console.log(JSON.stringify(items))
             let cursor: any;
             try {
-                cursor = await items.find(query);
+                cursor = items.find(query);
+                console.log(`cursor: ${JSON.stringify(cursor)}`)
             } catch (e) {
                 console.error(`Unable to issue find command, ${e}`);
-                return { itemsList: 0, totalItemsList: 0 };
+                return { itemsList: [], totalItemsList: 0 };
             }
             const displayCursor = cursor
-                .limit(ordersPerPage)
-                .skip(ordersPerPage * page);
+                .limit(itemsPerPage)
+                .skip(itemsPerPage * page);
             try {
-                const itemsList = await displayCursor.toArray();
 
-                const totalItemsList = await items.countDocuments(query);
-                return { itemsList, totalItemsList };
+                let itemsList = await displayCursor.toArray();
+                let totalItemsList = await items.countDocuments(query);
+                let response = { itemsList, totalItemsList }
+                return response;
             } catch (e) {
                 console.log(
                     `Unable to convert cursor to array or problem counting documents, ${e}`,
                 );
-                return { ordersList: [], totalOrderList: 0 };
+                return { itemsList: [], totalItemsList: 0 };
             }
 
 
@@ -73,7 +76,7 @@ export default class ScraperDao {
     static async insertItem({
         itemName = "",
         cost = 0,
-        image = "",
+        images = [],
         storeName = ""
     } = {}): Promise<any> {
         let item: any;
@@ -82,7 +85,7 @@ export default class ScraperDao {
         item = {
             itemName,
             cost,
-            image,
+            images,
             storeName
         };
 
@@ -93,6 +96,17 @@ export default class ScraperDao {
         } catch (e) {
             console.log(`Unable to insert order, ${e}`);
             return (item = {});
+        }
+    }
+
+    static async insertItems(objectFromResponse: any): Promise<any> {
+        let cursor: any;
+        try {
+            cursor = items.insertMany(objectFromResponse);
+            return cursor;
+        } catch (e) {
+            console.log(`Unable to insert order, ${e}`);
+            return (objectFromResponse = [{}]);
         }
     }
 
