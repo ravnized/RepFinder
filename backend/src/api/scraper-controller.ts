@@ -4,13 +4,6 @@ const cheerio = require("cheerio")
 import mongoose, { mongo } from "mongoose";
 import ScraperDao from "../dao/scraperDao";
 
-var OrderSchema = new mongoose.Schema({
-    itemName: mongoose.Schema.Types.String,
-    cost: mongoose.Schema.Types.Number,
-    image: mongoose.Schema.Types.String,
-    storeName: mongoose.Schema.Types.String,
-});
-
 
 
 
@@ -19,20 +12,54 @@ export default class ScraperController {
     static currentPage = 1;
     static urlMod = "";
 
-    getResponseData(url: string, filename: string) {
-        axios.interceptors.request.use(request => {
-            console.log('Starting Request', JSON.stringify(request, null, 2))
-            return request
-        })
-        return axios.get(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': '*/*',
-            }
-        }).then((response) => {
-            console.log("got response")
+    static async provaClasse() {
+        const { FakeBrowser } = require('fakebrowser');
 
-            let $ = cheerio.load(response.data);
+        !(async () => {
+            const createBrowserAndGoto = async (userDataDir: any, url: any) => {
+                const builder = new FakeBrowser.Builder()
+                    .vanillaLaunchOptions({
+                        headless: true,
+                    })
+                    .userDataDir(userDataDir);
+
+                const fakeBrowser = await builder.launch();
+                const page = await fakeBrowser.vanillaBrowser.newPage();
+                await page.goto(url);
+
+                // ***** Do something automatic *****
+
+                // Don't forget to close your browser to release resources
+                await fakeBrowser.shutdown();
+            };
+
+            createBrowserAndGoto('./fakeBrowserUserData1', 'https://fingerprintjs.github.io/fingerprintjs/').then(e => e);
+            createBrowserAndGoto('./fakeBrowserUserData2', 'https://fingerprintjs.github.io/fingerprintjs/').then(e => e);
+        })();
+
+    }
+
+    static getResponseData(url: string, filename: string) {
+        /*
+        const execSync = require('child_process').execSync;
+        try {
+            const { FakeBrowser } = require('fakebrowser');
+            const builder = new FakeBrowser.Builder()
+                .displayUserActionLayer(false)
+                .vanillaLaunchOptions({
+                    headless: false,
+                    executablePath: '/Applications/Google Chrome 93.0.4577.82.app/Contents/MacOS/Google Chrome',
+
+                })
+            const fakeBrowser = builder.launch();
+            const page = fakeBrowser.vanillaBrowser.newPage();
+            page.goto(url);
+            //const output = execSync(`curl ${url}`, { encoding: 'utf-8' });  // the default is 'buffer'
+            console.log("got response")
+            console.log(page)
+            fakeBrowser.shutdown();
+            
+            let $ = cheerio.load(output);
             let pagination__active_next = $('.pagination__active').next();
             let pageMax = $('input[name=page]').attr('max');
 
@@ -45,22 +72,31 @@ export default class ScraperController {
                 } else {
                     ScraperController.urlMod = url.slice(0, url.length - 2)
                 }
-
-                console.log(ScraperController.urlMod)
-                delete response.data;
                 ScraperController.currentPage++;
+                console.log(ScraperController.urlMod + ScraperController.currentPage)
                 this.getResponseData(ScraperController.urlMod + ScraperController.currentPage, filename);
             } else {
                 fs.writeFile(`./cache/${filename}.txt`, `${ScraperController.finalFile}`, (error: any) => {
                     console.log(error)
                 });
             }
+        } catch (e) {
+            console.log(`error: ${e}`);
+        }
+*/
+
+        /*
+        axios.get(url, {
+
+        }).then((response) => {
+            
 
         }).catch((err) => {
             console.log(err)
             this.getResponseData(ScraperController.urlMod + ScraperController.currentPage, filename)
         })
-
+        
+        */
     }
 
     static async converFileToItems(filename: string, req: any, res: any, next: any) {
@@ -128,6 +164,12 @@ export default class ScraperController {
         if (req.body.storeName) {
             filters.storeName = req.body.storeName;
         }
+        if (req.body.$text) {
+            filters.$text = req.body.$text;
+        }
+
+
+
 
         console.error(`request body: ${JSON.stringify(req.body)}`);
         console.error(filters);

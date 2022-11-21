@@ -23,7 +23,7 @@ mongoClient
 		console.error(err.stack);
 	})
 	.then(async (connection: any) => {
-		app.listen(8000, () => console.log("Server started on port 8000"));
+		app.listen(3000, () => console.log("Server started on port 3000"));
 		await ScraperDao.connDB(connection);
 		//let scraper = new ScraperDao();
 		//await scraper.getResponseData("https://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
@@ -37,6 +37,8 @@ app.use(function (req, res, next) {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+app.get("http://husky-reps.x.yupoo.com/albums?page=1")
 
 app.use("/api/v1/items", scraperRoutes);
 app.use("*", (req, res) => {

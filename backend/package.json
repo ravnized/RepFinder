@@ -10,12 +10,14 @@
     "dotenv": "^16.0.3",
     "easytimer.js": "^4.5.4",
     "express": "^4.18.2",
+    "fakebrowser": "^0.0.66",
     "mongodb": "^4.11.0",
     "mongoose": "^6.7.2",
     "node-fetch": "^2.6.7",
     "ts-node": "^10.9.1",
     "tsc": "^2.0.4",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "xmlhttprequest": "^1.8.0"
   },
   "name": "backend",
   "version": "1.0.0",

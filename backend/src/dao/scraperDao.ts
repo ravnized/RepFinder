@@ -3,6 +3,7 @@ let items: any;
 interface filtersArray {
     [key: string]: string | number;
 }
+import { Db } from "mongodb";
 import mongoose from "mongoose";
 export default class ScraperDao {
 
@@ -11,6 +12,9 @@ export default class ScraperDao {
         if (items) return;
         try {
             items = await conn.db("Main").collection("Items");
+            await conn.db("Main").collection("Items").createIndex({
+                itemName: "text"
+            })
             console.log(`Items collection initialized`);
         } catch (e) {
             console.error(`unable to enstablish a collection handle ${e}`);
@@ -23,9 +27,10 @@ export default class ScraperDao {
         itemsPerPage = 10,
     } = {}): Promise<any> {
         let itemName = "",
-            cost = 0,
+            cost: any = [],
             images: any = [],
-            storeName = "";
+            storeName = "",
+            $text;
 
         try {
             let query: any = {
@@ -33,13 +38,30 @@ export default class ScraperDao {
                 cost,
                 images,
                 storeName,
+                $text,
             }
 
+
             for (let querySingle in query) {
-                query[querySingle] = { $eq: filters[querySingle] };
-                if (filters[querySingle] == undefined) {
+
+                let filterArray: any = filters[querySingle]
+                if (filterArray !== undefined) {
+
+
+                    const entries = new Map([
+                        [filterArray[1], filterArray[0]]
+                    ]);
+                    let object = Object.fromEntries(entries)
+                    console.log(`oggetto: ${JSON.stringify(object)}`)
+                    query[querySingle] = object;
+
+
+                } else {
                     delete query[querySingle];
                 }
+
+
+
             }
             console.log(`requested query ${JSON.stringify(query)}`);
             //console.log(JSON.stringify(items))
@@ -49,7 +71,7 @@ export default class ScraperDao {
                 console.log(`cursor: ${JSON.stringify(cursor)}`)
             } catch (e) {
                 console.error(`Unable to issue find command, ${e}`);
-                return { itemsList: [], totalItemsList: 0 };
+                return { itemsList: {}, totalItemsList: 0 };
             }
             const displayCursor = cursor
                 .limit(itemsPerPage)
@@ -64,7 +86,7 @@ export default class ScraperDao {
                 console.log(
                     `Unable to convert cursor to array or problem counting documents, ${e}`,
                 );
-                return { itemsList: [], totalItemsList: 0 };
+                return { itemsList: {}, totalItemsList: 0 };
             }
 
 
