@@ -1,138 +1,117 @@
-import axios from "axios";
 const fs = require("fs")
 const cheerio = require("cheerio")
-import mongoose, { mongo } from "mongoose";
 import ScraperDao from "../dao/scraperDao";
-
+import puppeteer from 'puppeteer';
 
 
 
 export default class ScraperController {
-    static finalFile = "";
+
     static currentPage = 1;
     static urlMod = "";
 
-    static async provaClasse() {
-        const { FakeBrowser } = require('fakebrowser');
+    static async scraperMain(url: string, filename: string, res: any) {
+        let finalFile = "";
 
-        !(async () => {
-            const createBrowserAndGoto = async (userDataDir: any, url: any) => {
-                const builder = new FakeBrowser.Builder()
-                    .vanillaLaunchOptions({
-                        headless: true,
-                    })
-                    .userDataDir(userDataDir);
-
-                const fakeBrowser = await builder.launch();
-                const page = await fakeBrowser.vanillaBrowser.newPage();
-                await page.goto(url);
-
-                // ***** Do something automatic *****
-
-                // Don't forget to close your browser to release resources
-                await fakeBrowser.shutdown();
-            };
-
-            createBrowserAndGoto('./fakeBrowserUserData1', 'https://fingerprintjs.github.io/fingerprintjs/').then(e => e);
-            createBrowserAndGoto('./fakeBrowserUserData2', 'https://fingerprintjs.github.io/fingerprintjs/').then(e => e);
-        })();
-
-    }
-
-    static getResponseData(url: string, filename: string) {
-        /*
-        const execSync = require('child_process').execSync;
         try {
-            const { FakeBrowser } = require('fakebrowser');
-            const builder = new FakeBrowser.Builder()
-                .displayUserActionLayer(false)
-                .vanillaLaunchOptions({
-                    headless: false,
-                    executablePath: '/Applications/Google Chrome 93.0.4577.82.app/Contents/MacOS/Google Chrome',
 
-                })
-            const fakeBrowser = builder.launch();
-            const page = fakeBrowser.vanillaBrowser.newPage();
-            page.goto(url);
-            //const output = execSync(`curl ${url}`, { encoding: 'utf-8' });  // the default is 'buffer'
-            console.log("got response")
-            console.log(page)
-            fakeBrowser.shutdown();
-            
-            let $ = cheerio.load(output);
-            let pagination__active_next = $('.pagination__active').next();
-            let pageMax = $('input[name=page]').attr('max');
-
-            console.log(pagination__active_next.text())
-            if (ScraperController.currentPage <= pageMax) {
-                ScraperController.finalFile += $('main').html();
-                console.log(url)
-                if (ScraperController.currentPage <= 9) {
-                    ScraperController.urlMod = url.slice(0, url.length - 1)
-                } else {
-                    ScraperController.urlMod = url.slice(0, url.length - 2)
-                }
-                ScraperController.currentPage++;
-                console.log(ScraperController.urlMod + ScraperController.currentPage)
-                this.getResponseData(ScraperController.urlMod + ScraperController.currentPage, filename);
-            } else {
-                fs.writeFile(`./cache/${filename}.txt`, `${ScraperController.finalFile}`, (error: any) => {
-                    console.log(error)
-                });
+            const browser = await puppeteer.launch();
+            try {
+                this.spawnerPage(url, filename, browser, finalFile, res)
+            } catch (e) {
+                console.log(`error ${e}`)
             }
+            // Don't forget to close your browser to release resources
         } catch (e) {
             console.log(`error: ${e}`);
         }
-*/
 
-        /*
-        axios.get(url, {
-
-        }).then((response) => {
-            
-
-        }).catch((err) => {
-            console.log(err)
-            this.getResponseData(ScraperController.urlMod + ScraperController.currentPage, filename)
-        })
-        
-        */
     }
 
-    static async converFileToItems(filename: string, req: any, res: any, next: any) {
+    static async spawnerPage(url: string, filename: string, browser: any, finalFile: any, res: any) {
+        const page = await browser.newPage();
+        await page.goto(url);
+        let htmlPage = await page.content();
+        await page.close();
+        let $ = cheerio.load(htmlPage);
+        let pagination__active_next = $('.pagination__active').next();
+        let pageMax = $('input[name=page]').attr('max');
+
+        console.log(pagination__active_next.text())
+        if (ScraperController.currentPage <= pageMax) {
+            $('.showindex__children').each((index: number, item: any) => {
+                finalFile += $(item).html();
+            })
+            console.log(url)
+            if (ScraperController.currentPage <= 9) {
+                ScraperController.urlMod = url.slice(0, url.length - 1)
+            } else {
+                ScraperController.urlMod = url.slice(0, url.length - 2)
+            }
+            ScraperController.currentPage++;
+            console.log(ScraperController.urlMod + ScraperController.currentPage)
+            this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
+        } else {
+            fs.writeFile(`./cache/${filename}.txt`, `${finalFile}`, (error: any) => {
+                console.log(error)
+            });
+            await browser.close();
+            return res.json({
+                filename: filename,
+                success: "true",
+            })
+        }
+    }
+
+    static async converFileToItems(filename: string, url: string, req: any, res: any, next: any) {
         let responseTotalDebug = "";
         let responseTotal: any[] = [];
         let indexAddedItems = 0
         const $ = cheerio.load(fs.readFileSync(`./cache/${filename}.txt`));
-        $('.album3__main').each((index: number, item: any) => {
+        var regexAlbum = new RegExp(`album.{1,}main`)
+        let arrayAlbum = regexAlbum.exec(fs.readFileSync(`./cache/${filename}.txt`));
+        console.log(arrayAlbum)
+        $(`.${arrayAlbum![0]}`).each((index: number, item: any) => {
             let title = $(item).attr("title");
-            //console.log(title);
+            console.log(title)
+            let link = $(item).attr("href");
+            link = url + link;
+            console.log(link)
             var regex = new RegExp("\\d{1,}");
             let array = regex.exec(title)
             if (array == null) {
                 return;
             }
-            //console.log(`Cost of the item: ${array![0]} yuan`);
+            console.log(`Cost of the item: ${array![0]} yuan`);
             let prezzoRegex = new RegExp("[^￥🔥](?<!\\d)(?<!\\s)\\D+", 'gi');
             let titleFinal = prezzoRegex.exec(title)
             if (titleFinal == null) {
                 return;
             }
             let arrayPhoto: any[] = [];
-            let albumImgWrap = $(item).find('.album3__squareWrap img').each((index: number, item: any) => {
+            let regexPhoto = new RegExp(`album.{1,}wrap`)
+            let arrayAlbumPhoto = regexPhoto.exec(fs.readFileSync(`./cache/${filename}.txt`))
+            let linkPhoto = "";
+            let albumImgWrap = $(item).find(`.${arrayAlbumPhoto![0]} img`).each((index: number, item: any) => {
                 let photo = $(item);
-                let linkPhoto = photo.attr("data-origin-src");
+                linkPhoto = photo.attr("data-origin-src");
+                if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
+                    linkPhoto = photo.attr("src");
+                    if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
+                        linkPhoto = photo.attr("data-src");
+                    }
+                }
                 linkPhoto = "https:" + linkPhoto;
                 let photoTitle = photo.attr("title");
-                arrayPhoto[index] = linkPhoto;
-                //console.log(linkPhoto);
+                console.log(linkPhoto);
             })
 
             let response = {
                 itemName: titleFinal![0],
                 cost: Number(array![0]),
-                images: arrayPhoto,
+                images: linkPhoto,
                 storeName: filename,
+                link: link
             }
             responseTotal[indexAddedItems] = response;
             indexAddedItems++;

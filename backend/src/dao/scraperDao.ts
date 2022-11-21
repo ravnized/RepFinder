@@ -15,6 +15,7 @@ export default class ScraperDao {
             await conn.db("Main").collection("Items").createIndex({
                 itemName: "text"
             })
+            //await conn.db("Main").collection("Items").deleteMany({})
             console.log(`Items collection initialized`);
         } catch (e) {
             console.error(`unable to enstablish a collection handle ${e}`);

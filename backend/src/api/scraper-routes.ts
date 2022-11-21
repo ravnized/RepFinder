@@ -4,11 +4,10 @@ import ScraperController from "./scraper-controller";
 const router = express.Router();
 router.route("/").get(ScraperController.apiGetItem);
 router.route("/").post(ScraperController.apiInsertItem);
-router.route("/convert/:filename/").post((req: any, res: any, next: any) => {
-    ScraperController.converFileToItems(req.params.filename, req, res, next)
+router.route("/convert/").post((req: any, res: any, next: any) => {
+    ScraperController.converFileToItems(req.body.filename,req.body.url, req, res, next)
 });
 router.route("/scraper/").post((req: any, res: any, next: any) => {
-    ScraperController.getResponseData(req.body.scraper, req.body.filename);
-    ScraperController.provaClasse();
+    ScraperController.scraperMain(req.body.scraper, req.body.filename, res);
 });
 export default router;
