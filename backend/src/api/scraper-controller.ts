@@ -101,13 +101,16 @@ export default class ScraperController {
             let regexPhoto = new RegExp(`album.{1,}wrap`)
             let arrayAlbumPhoto = regexPhoto.exec(fs.readFileSync(`./cache/${filename}.txt`))
             let linkPhoto = "";
+
             let albumImgWrap = $(item).find(`.${arrayAlbumPhoto![0]} img`).each((index: number, item: any) => {
                 let photo = $(item);
                 linkPhoto = photo.attr("data-origin-src");
                 if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
                     linkPhoto = photo.attr("src");
+                    console.log(`src: ${linkPhoto}`)
                     if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
                         linkPhoto = photo.attr("data-src");
+                        console.log(`data-src: ${linkPhoto}`)
                     }
                 }
                 linkPhoto = "https:" + linkPhoto;
@@ -124,7 +127,7 @@ export default class ScraperController {
             }
             responseTotal[indexAddedItems] = response;
             indexAddedItems++;
-            responseTotalDebug += `Inserting ${response.itemName}, cost: ${response.cost}, images: ${arrayPhoto.toString()} storeName: ${filename} \n`;
+            responseTotalDebug += `Inserting ${response.itemName}, cost: ${response.cost}, images: ${response.images} storeName: ${filename} \n`;
         })
         fs.writeFileSync(`log-${filename}.txt`, responseTotalDebug)
 
