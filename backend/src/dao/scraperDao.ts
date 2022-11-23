@@ -3,8 +3,6 @@ let items: any;
 interface filtersArray {
     [key: string]: string | number;
 }
-import { Db } from "mongodb";
-import mongoose from "mongoose";
 export default class ScraperDao {
 
 

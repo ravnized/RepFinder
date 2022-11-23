@@ -2,9 +2,6 @@ const fs = require("fs")
 const cheerio = require("cheerio")
 import ScraperDao from "../dao/scraperDao";
 import puppeteer from 'puppeteer';
-
-
-
 export default class ScraperController {
 
     static currentPage = 1;
@@ -23,6 +20,10 @@ export default class ScraperController {
             }
             // Don't forget to close your browser to release resources
         } catch (e) {
+            res.JSON({
+                error: e,
+                status: "failed"
+            })
             console.log(`error: ${e}`);
         }
 
@@ -65,7 +66,14 @@ export default class ScraperController {
                 })
             }
         } catch (e) {
-            this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
+            try {
+                this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
+            } catch (e) {
+                res.json({
+                    error: e,
+                    status: "failed"
+                })
+            }
             console.log(`Error ${e}`)
         }
 
@@ -191,6 +199,10 @@ export default class ScraperController {
         try {
             query = req.body;
         } catch (e) {
+            res.JSON({
+                error: e,
+                status: "failed"
+            })
             console.error(`Can't retrive request.body ${e}`);
         }
 
@@ -206,6 +218,10 @@ export default class ScraperController {
                 storeName: storeName,
             });
         } catch (e) {
+            res.JSON({
+                error: e,
+                status: "failed"
+            })
             console.error(`Problem in inserting order ${e}`);
         }
 
@@ -218,6 +234,10 @@ export default class ScraperController {
         try {
             insertItemsResponse = await ScraperDao.insertItems(objectRetrived);
         } catch (e) {
+            res.JSON({
+                error: e,
+                status: "failed"
+            })
             console.error(`Problem in inserting order ${e}`);
         }
         res.json(insertItemsResponse);

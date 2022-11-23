@@ -11,6 +11,7 @@ const app = express();
 declare var process: {
 	env: {
 		MONGODB_URI: string;
+		PORT: number
 	};
 };
 dotenv.config({ path: __dirname + "/../.env" });
@@ -23,7 +24,7 @@ mongoClient
 		console.error(err.stack);
 	})
 	.then(async (connection: any) => {
-		app.listen(3000, () => console.log("Server started on port 3000"));
+		app.listen(process.env.PORT || 5000, "0.0.0.0", () => console.log("Server started"));
 		await ScraperDao.connDB(connection);
 		//let scraper = new ScraperDao();
 		//await scraper.getResponseData("https://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
