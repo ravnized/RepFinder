@@ -39,8 +39,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-app.get("http://husky-reps.x.yupoo.com/albums?page=1")
-
 app.use("/api/v1/items", scraperRoutes);
 app.use("*", (req, res) => {
 	res.status(404).json({ error: "not found" });
