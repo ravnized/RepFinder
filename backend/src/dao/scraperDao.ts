@@ -1,4 +1,5 @@
 
+
 let items: any;
 interface filtersArray {
     [key: string]: string | number;
@@ -41,6 +42,7 @@ export default class ScraperDao {
             }
 
 
+
             for (let querySingle in query) {
 
                 let filterArray: any = filters[querySingle]
@@ -78,7 +80,9 @@ export default class ScraperDao {
             try {
 
                 let itemsList = await displayCursor.toArray();
+
                 let totalItemsList = await items.countDocuments(query);
+
                 let response = { itemsList, totalItemsList }
                 return response;
             } catch (e) {

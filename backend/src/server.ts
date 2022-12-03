@@ -24,17 +24,13 @@ mongoClient
 		console.error(err.stack);
 	})
 	.then(async (connection: any) => {
-		app.listen(process.env.PORT || 5000, "0.0.0.0", () => console.log("Server started"));
+		app.listen(process.env.PORT || 6000, "0.0.0.0", () => console.log("Server started"));
 		await ScraperDao.connDB(connection);
 		//let scraper = new ScraperDao();
 		//await scraper.getResponseData("https://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
 
 	});
-app.use(function (req, res, next) {
-	res.header("Access-Control-Allow-Origin", "93.41.49.55"); // update to match the domain you will make the request from
-	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-	next();
-});
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());

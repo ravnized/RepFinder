@@ -23,9 +23,7 @@ function NavbarCustom() {
 					<Navbar.Toggle aria-controls="responsive-navbar-nav" />
 					<Navbar.Collapse id="responsive-navbar-nav">
 						<Nav className="me-auto justify-content-end flex-grow-1 pe-3">
-							<Nav.Link>
-								<Link to={"/search"}>Search</Link>
-							</Nav.Link>
+							<Link to={"/search"}>Search</Link>
 						</Nav>
 					</Navbar.Collapse>
 				</Container>

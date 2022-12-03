@@ -4,20 +4,34 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import InputSpinner from "react-bootstrap-input-spinner";
+import ItemsDataServices from "../services/ItemsServices";
 
 const SearchForm = ({ formsValue }: any) => {
 	const [valueSpinner, setValueSpinner] = useState(Number);
 	const [valueItemName, setValueItemName] = useState("");
 	const [valueSelector, setValueSelector] = useState("$eq");
+	const [items, setItems] = useState([]);
+	const [page, setPage] = useState(0);
 	function handleSubmit(e: any) {
 		e.preventDefault();
 	}
 
+	function submitSearch(): Promise<boolean> {
+		ItemsDataServices.getItems(valueItemName, valueSpinner, valueSelector, page)
+			.then((res) => {
+				console.log(res);
+				setItems(res.items);
+				return Promise.resolve(true);
+			})
+			.catch((e) => {
+				console.error(`Errore :${e}`);
+			});
+		return Promise.resolve(false);
+	}
+
 	useEffect(() => {
 		let valueData = {
-			valueSpinner: valueSpinner,
-			valueItemName: valueItemName,
-			valueSelector: valueSelector,
+			items: items,
 		};
 		formsValue(valueData);
 	});
@@ -26,7 +40,7 @@ const SearchForm = ({ formsValue }: any) => {
 		<Form>
 			<Row>
 				<Col xs="auto">
-					<Form.Group className="mb-3" controlId="formBasicSearch">
+					<Form.Group className="mb-3">
 						<Form.Control
 							type="text"
 							placeholder="Name"
@@ -66,6 +80,7 @@ const SearchForm = ({ formsValue }: any) => {
 						type="submit"
 						onClick={(e) => {
 							handleSubmit(e);
+							submitSearch();
 						}}
 					>
 						Search

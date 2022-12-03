@@ -2,6 +2,10 @@ const fs = require("fs")
 const cheerio = require("cheerio")
 import ScraperDao from "../dao/scraperDao";
 import puppeteer from 'puppeteer';
+import axios from "axios";
+import * as http from 'http';
+import async from "async"
+const Agent = require("agentkeepalive");
 export default class ScraperController {
 
     static currentPage = 1;
@@ -30,6 +34,7 @@ export default class ScraperController {
     }
 
     static async spawnerPage(url: string, filename: string, browser: any, finalFile: any, res: any) {
+
         let page;
         let htmlPage;
         try {
@@ -44,8 +49,10 @@ export default class ScraperController {
             console.log(pagination__active_next.text())
             if (ScraperController.currentPage <= pageMax) {
                 $('.showindex__children').each((index: number, item: any) => {
+
                     finalFile += $(item).html();
                 })
+
                 console.log(url)
                 if (ScraperController.currentPage <= 9) {
                     ScraperController.urlMod = url.slice(0, url.length - 1)
@@ -60,6 +67,8 @@ export default class ScraperController {
                     console.log(error)
                 });
                 await browser.close();
+                ScraperController.currentPage = 1;
+                ScraperController.urlMod = "";
                 return res.json({
                     filename: filename,
                     success: "true",
@@ -81,25 +90,27 @@ export default class ScraperController {
     }
 
     static async converFileToItems(filename: string, url: string, req: any, res: any, next: any) {
+
         let responseTotalDebug = "";
         let responseTotal: any[] = [];
-        let indexAddedItems = 0
+        let indexAddedItems = 0;
         const $ = cheerio.load(fs.readFileSync(`./cache/${filename}.txt`));
         var regexAlbum = new RegExp(`album.{1,}main`)
         let arrayAlbum = regexAlbum.exec(fs.readFileSync(`./cache/${filename}.txt`));
-        console.log(arrayAlbum)
-        $(`.${arrayAlbum![0]}`).each((index: number, item: any) => {
+
+        $(`.${arrayAlbum![0]}`).each(async (index: number, item: any) => {
+            let finished = false;
             let title = $(item).attr("title");
-            console.log(title)
+
             let link = $(item).attr("href");
             link = url + link;
-            console.log(link)
+
             var regex = new RegExp("\\d{1,}");
             let array = regex.exec(title)
             if (array == null) {
                 return;
             }
-            console.log(`Cost of the item: ${array![0]} yuan`);
+
             let prezzoRegex = new RegExp("[^￥🔥](?<!\\d)(?<!\\s)\\D+", 'gi');
             let titleFinal = prezzoRegex.exec(title)
             if (titleFinal == null) {
@@ -109,22 +120,24 @@ export default class ScraperController {
             let regexPhoto = new RegExp(`album.{1,}wrap`)
             let arrayAlbumPhoto = regexPhoto.exec(fs.readFileSync(`./cache/${filename}.txt`))
             let linkPhoto = "";
+            let image;
 
-            let albumImgWrap = $(item).find(`.${arrayAlbumPhoto![0]} img`).each((index: number, item: any) => {
-                let photo = $(item);
-                linkPhoto = photo.attr("data-origin-src");
+
+            let photo = $(item).find(`.${arrayAlbumPhoto![0]} img`);
+            linkPhoto = photo.attr("data-origin-src");
+            if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
+                linkPhoto = photo.attr("src");
+
                 if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
-                    linkPhoto = photo.attr("src");
-                    console.log(`src: ${linkPhoto}`)
-                    if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
-                        linkPhoto = photo.attr("data-src");
-                        console.log(`data-src: ${linkPhoto}`)
-                    }
+                    linkPhoto = photo.attr("data-src");
+
                 }
+            }
+            if (linkPhoto.slice(0, 4) !== "data") {
                 linkPhoto = "https:" + linkPhoto;
-                let photoTitle = photo.attr("title");
-                console.log(linkPhoto);
-            })
+
+                console.log(linkPhoto)
+            }
 
             let response = {
                 itemName: titleFinal![0],
@@ -144,50 +157,135 @@ export default class ScraperController {
     }
 
 
+    static async getPhoto(item: any, axiosInstance: any) {
 
+    }
     static async apiGetItem(req: any, res: any, next: any) {
+        const HttpsAgent = require("agentkeepalive").HttpsAgent;
         const itemsPerPage = req.query.itemsPerPage
             ? parseInt(req.query.itemsPerPage, 10)
             : 20;
         const page = req.query.page ? parseInt(req.query.page, 10) : 0;
+        interface objectResponse {
+            _id: string,
+            itemName: string,
+            cost: Number,
+            images: string,
+            storeName: string,
+            link: string
+        }
+
 
         let filters: any = {};
 
-        if (req.body.cost) {
-            filters.cost = req.body.cost;
+        if (req.query.cost) {
+            filters.cost = req.query.cost;
+            filters.cost[0] = Number(filters.cost[0])
         }
 
-        if (req.body.itemName) {
-            filters.itemName = req.body.itemName;
+        if (req.query.itemName) {
+            filters.itemName = req.query.itemName;
         }
-        if (req.body.storeName) {
-            filters.storeName = req.body.storeName;
+        if (req.query.storeName) {
+            filters.storeName = req.query.storeName;
         }
-        if (req.body.$text) {
-            filters.$text = req.body.$text;
+        if (req.query.$text) {
+            filters.$text = req.query.$text;
         }
 
 
 
 
-        console.error(`request body: ${JSON.stringify(req.body)}`);
+        console.error(`request body: ${JSON.stringify(req.body)} `);
         console.error(filters);
+
+
+
 
         let responseGetItems = await ScraperDao.getItems({
             filters,
             page,
             itemsPerPage,
+        })
+
+        const keepAliveAgent = new Agent({
+            keepAlive: true,
+            maxSockets: 128, // or 128 / os.cpus().length if running node across multiple CPUs
+            maxFreeSockets: 128, // or 128 / os.cpus().length if running node across multiple CPUs
+            timeout: 60000, // active socket keepalive for 60 seconds
+            freeSocketTimeout: 30000, // free socket keepalive for 30 seconds
+        });
+        const httpsKeepAliveAgent = new HttpsAgent({
+            keepAlive: true,
+            maxSockets: 128, // or 128 / os.cpus().length if running node across multiple CPUs
+            maxFreeSockets: 128, // or 128 / os.cpus().length if running node across multiple CPUs
+            timeout: 60000, // active socket keepalive for 30 seconds
+            freeSocketTimeout: 30000, // free socket keepalive for 30 seconds
         });
 
-        let response = {
-            items: responseGetItems.itemsList,
-            page: page,
-            filters: filters,
-            entries_per_page: itemsPerPage,
-            total_results: responseGetItems.totalItemsLIst,
-        };
-        res.json(response);
+
+        let instance = axios.create({
+            httpAgent: keepAliveAgent,
+            httpsAgent: httpsKeepAliveAgent,
+
+        })
+
+        let indexLast: number = 0;
+        responseGetItems.itemsList.map((item: any, index: any) => {
+            if (item.images.slice(0, 4) == "data") {
+                item.imageBuffer = item.images;
+                responseGetItems.itemsList[index] = item;
+                indexLast++;
+            } else {
+                instance.get(item.images, {
+                    responseType: 'arraybuffer',
+                    headers: {
+                        "Referer": item.link
+                    }
+                }).then((response: any) => {
+                    let buffered = Buffer.from(response.data, 'binary').toString("base64");
+                    item.imageBuffer = buffered;
+                    responseGetItems.itemsList[index] = item;
+                    console.log(indexLast)
+                    indexLast++;
+                    console.log(item.itemName);
+
+
+
+
+                })
+            }
+
+
+
+
+
+        })
+
+        if (indexLast == itemsPerPage - 1) {
+            let response = {
+                items: responseGetItems.itemsList,
+                page: page,
+                filters: filters,
+                entries_per_page: itemsPerPage,
+                total_results: responseGetItems.totalItemsLIst,
+            };
+            res.json(response)
+
+        }
     }
+
+
+
+
+
+
+
+
+    /*
+    
+   
+    */
 
     static async apiInsertItem(req: any, res: any, next: any) {
         let itemName = "",
@@ -234,7 +332,7 @@ export default class ScraperController {
         try {
             insertItemsResponse = await ScraperDao.insertItems(objectRetrived);
         } catch (e) {
-            res.JSON({
+            res.json({
                 error: e,
                 status: "failed"
             })

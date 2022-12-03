@@ -12,6 +12,8 @@
 		"@types/react-dom": "^18.0.9",
 		"axios": "^1.2.0",
 		"bootstrap": "^5.2.3",
+		"cheerio": "^1.0.0-rc.12",
+		"puppeteer": "^19.3.0",
 		"react": "^18.2.0",
 		"react-bootstrap": "^2.6.0",
 		"react-bootstrap-input-spinner": "^1.0.2",

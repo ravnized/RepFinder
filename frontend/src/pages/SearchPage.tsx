@@ -1,26 +1,23 @@
 import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
+import ItemsCard from "../components/ItemsCard";
 import SearchForm from "../components/SearchForm";
 function SearchPage() {
-	let [spinnerValue, setSpinnerValue] = useState(Number);
-	let [itemNameValue, setItemNameValue] = useState("");
-	let [selectorValue, setSelectorValue] = useState("");
+	let [items, setItems] = useState([]);
+	let [responseValue, setResponseValue] = useState({});
 
 	let getValueForms = (valueData: any) => {
-		setSpinnerValue(valueData.valueSpinner);
-		setItemNameValue(valueData.valueItemName);
-		setSelectorValue(valueData.valueSelector);
+		setItems(valueData.items);
 	};
 
 	useEffect(() => {
-		console.log(`spinnerValue: ${spinnerValue}`);
-		console.log(`itemName: ${itemNameValue}`);
-		console.log(`selectorValue: ${selectorValue}`);
-	}, [itemNameValue, selectorValue, spinnerValue]);
+		console.log(items);
+	}, [items]);
 
 	return (
 		<Container>
 			<SearchForm formsValue={getValueForms} />
+			<ItemsCard responseValue={items} />
 		</Container>
 	);
 }
