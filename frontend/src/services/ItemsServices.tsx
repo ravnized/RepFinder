@@ -8,9 +8,10 @@ class ItemsDataServices {
 		itemName: string,
 		cost: number,
 		operator: string,
-		page = 0,
+		page: number,
 	) {
-		let baseUrl = "http://localhost:5000/api/v1/items";
+		let baseUrl =
+			"http://backend-repfinder.fqavgjc6anc7awa8.germanywestcentral.azurecontainer.io:5000/api/v1/items";
 		let finalUrl = baseUrl;
 		finalUrl += `?page=${page}`;
 		if (cost !== 0) {
@@ -28,7 +29,6 @@ class ItemsDataServices {
 
 		return response.json();
 	}
-	
 }
 
 export default ItemsDataServices;

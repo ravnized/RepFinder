@@ -157,7 +157,18 @@ export default class ScraperController {
     }
 
 
-    static async getPhoto(item: any, axiosInstance: any) {
+    static async jsonResponser(itemsPerPage: number, responseGetItems: any, page: any, filters: any, res: any) {
+
+        let response = {
+            items: responseGetItems.itemsList,
+            page: page,
+            filters: filters,
+            entries_per_page: itemsPerPage,
+            total_results: responseGetItems.totalItemsLIst,
+        };
+        return res.json(response)
+
+
 
     }
     static async apiGetItem(req: any, res: any, next: any) {
@@ -235,8 +246,12 @@ export default class ScraperController {
 
             if (item.images.slice(0, 4) == "data") {
                 item.imageBuffer = item.images;
+                item.images = "";
                 responseGetItems.itemsList[index] = item;
                 indexLast++;
+                if (indexLast == itemsPerPage) {
+                    ScraperController.jsonResponser(itemsPerPage, responseGetItems, page, filters, res)
+                }
             } else {
                 instance.get(item.images, {
                     responseType: 'arraybuffer',
@@ -246,27 +261,20 @@ export default class ScraperController {
                 }).then((response: any) => {
                     let buffered = Buffer.from(response.data, 'binary').toString("base64");
                     item.imageBuffer = buffered;
+                    item.images = "";
                     responseGetItems.itemsList[index] = item;
                     console.log(indexLast)
                     indexLast++;
                     console.log(item.itemName);
-
+                    if (indexLast == itemsPerPage) {
+                        ScraperController.jsonResponser(itemsPerPage, responseGetItems, page, filters, res)
+                    }
 
 
 
                 })
             }
-            if (indexLast == itemsPerPage - 1) {
-                let response = {
-                    items: responseGetItems.itemsList,
-                    page: page,
-                    filters: filters,
-                    entries_per_page: itemsPerPage,
-                    total_results: responseGetItems.totalItemsLIst,
-                };
-                res.json(response)
 
-            }
 
 
 
@@ -276,18 +284,6 @@ export default class ScraperController {
 
 
     }
-
-
-
-
-
-
-
-
-    /*
-    
-   
-    */
 
     static async apiInsertItem(req: any, res: any, next: any) {
         let itemName = "",

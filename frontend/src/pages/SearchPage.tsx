@@ -2,21 +2,23 @@ import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
 import ItemsCard from "../components/ItemsCard";
 import SearchForm from "../components/SearchForm";
+import ButtonsForm from "../components/ButtonsForm";
 function SearchPage() {
 	let [items, setItems] = useState([]);
-	let [responseValue, setResponseValue] = useState({});
+	let [searchParams, setSearchParams] = useState({});
 
-	let getValueForms = (valueData: any) => {
-		setItems(valueData.items);
+	let getValueForm = (items: []) => {
+		setItems(items);
 	};
 
 	useEffect(() => {
 		console.log(items);
-	}, [items]);
+		console.log(searchParams);
+	}, [items, searchParams]);
 
 	return (
 		<Container>
-			<SearchForm formsValue={getValueForms} />
+			<SearchForm itemsRaw={getValueForm} />
 			<ItemsCard responseValue={items} />
 		</Container>
 	);
