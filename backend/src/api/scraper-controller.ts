@@ -232,6 +232,7 @@ export default class ScraperController {
 
         let indexLast: number = 0;
         responseGetItems.itemsList.map((item: any, index: any) => {
+
             if (item.images.slice(0, 4) == "data") {
                 item.imageBuffer = item.images;
                 responseGetItems.itemsList[index] = item;
@@ -255,6 +256,17 @@ export default class ScraperController {
 
                 })
             }
+            if (indexLast == itemsPerPage - 1) {
+                let response = {
+                    items: responseGetItems.itemsList,
+                    page: page,
+                    filters: filters,
+                    entries_per_page: itemsPerPage,
+                    total_results: responseGetItems.totalItemsLIst,
+                };
+                res.json(response)
+
+            }
 
 
 
@@ -262,17 +274,7 @@ export default class ScraperController {
 
         })
 
-        if (indexLast == itemsPerPage - 1) {
-            let response = {
-                items: responseGetItems.itemsList,
-                page: page,
-                filters: filters,
-                entries_per_page: itemsPerPage,
-                total_results: responseGetItems.totalItemsLIst,
-            };
-            res.json(response)
 
-        }
     }
 
 
