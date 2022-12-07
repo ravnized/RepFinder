@@ -160,6 +160,7 @@ export default class ScraperController {
     static async jsonResponser(itemsPerPage: number, responseGetItems: any, page: any, filters: any, res: any) {
 
         let response = {
+            code: 200,
             items: responseGetItems.itemsList,
             page: page,
             filters: filters,
@@ -218,6 +219,13 @@ export default class ScraperController {
             page,
             itemsPerPage,
         })
+
+        if (await responseGetItems.itemsList.length == 0) {
+            return res.json({
+                code: 200,
+                items: []
+            })
+        }
 
         const keepAliveAgent = new Agent({
             keepAlive: true,
@@ -337,6 +345,36 @@ export default class ScraperController {
             console.error(`Problem in inserting order ${e}`);
         }
         res.json(insertItemsResponse);
+    }
+
+    static async apiGetItemById(res: any, itemName: string) {
+        console.log(`itemName: ${itemName}`)
+        let objectId: any;
+        try {
+            objectId = await ScraperDao.getItemByID(itemName);
+        } catch (e) {
+            res.json({
+                error: e,
+                status: "failed"
+            })
+            console.error(`Problem in inserting order ${e}`);
+        }
+        res.json(objectId);
+    }
+
+    static async apiPopularity(res: any, itemName: string) {
+        let response: any;
+        try {
+            response = await ScraperDao.incrementOne(itemName);
+
+        } catch (e) {
+            res.json({
+                error: e,
+                status: "failed"
+            })
+            console.error(`Problem in inserting order ${e}`);
+        }
+        res.json(response)
     }
 
 }

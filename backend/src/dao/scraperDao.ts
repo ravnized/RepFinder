@@ -4,6 +4,7 @@ let items: any;
 interface filtersArray {
     [key: string]: string | number;
 }
+
 export default class ScraperDao {
 
 
@@ -14,6 +15,7 @@ export default class ScraperDao {
             await conn.db("Main").collection("Items").createIndex({
                 itemName: "text"
             })
+
             //await conn.db("Main").collection("Items").deleteMany({})
             console.log(`Items collection initialized`);
         } catch (e) {
@@ -98,6 +100,47 @@ export default class ScraperDao {
         }
 
     }
+
+    static async getItemByID(
+        itemName = "",
+    ): Promise<any> {
+        var ObjectId = require('mongodb').ObjectId;
+        let query = {
+            _id: "",
+        }
+
+
+        query._id = new ObjectId(itemName)
+        let cursor: any;
+        let itemsList: any;
+        try {
+
+            cursor = await items.find(query);
+
+
+
+
+        } catch (e) {
+            console.log(`Error handling: ${e}`)
+
+        }
+
+        const displayCursor = cursor
+            .limit(20)
+            .skip(20 * 0);
+        try {
+            itemsList = await displayCursor.toArray();
+
+        } catch (e) {
+            console.log(`Error handling: ${e}`)
+        }
+
+        let response = itemsList
+        return response;
+
+    }
+
+
     static async insertItem({
         itemName = "",
         cost = 0,
@@ -135,6 +178,25 @@ export default class ScraperDao {
         }
     }
 
+
+    static async incrementOne(itemName: string) {
+        var ObjectId = require('mongodb').ObjectId;
+        let item = await this.getItemByID(itemName);
+
+        if (await item[0].popularity === undefined) {
+            await items.updateOne(
+                { "_id": ObjectId(item[0]._id) },
+                {
+                    $set: { "popularity": 1 }
+                }
+            )
+        } else {
+            await items.updateOne(
+                { "_id": ObjectId(item[0]._id) },
+                { $set: { "popularity": item[0].popularity + 1 } }
+            )
+        }
+    }
 
 
 }

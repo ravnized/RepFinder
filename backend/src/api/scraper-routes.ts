@@ -30,6 +30,17 @@ router.route("/scraper/").post((req: any, res: any, next: any) => {
     }
 
 });
-
+router.route("/searchByID").get((req: any, res: any, next: any) => {
+    console.log(req.query.id)
+    return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.apiGetItemById(res, req.query.id) : res.json({
+        error: "No id"
+    })
+})
+router.route("/incrementOne").get((req: any, res: any, next: any) => {
+    console.log(req.query.id)
+    return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.apiPopularity(res, req.query.id) : res.json({
+        error: "No id"
+    })
+})
 
 export default router;

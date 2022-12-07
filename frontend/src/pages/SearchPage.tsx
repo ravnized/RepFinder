@@ -5,21 +5,27 @@ import SearchForm from "../components/SearchForm";
 import ButtonsForm from "../components/ButtonsForm";
 function SearchPage() {
 	let [items, setItems] = useState([]);
-	let [searchParams, setSearchParams] = useState({});
+	let [page, setPage] = useState(0);
 
 	let getValueForm = (items: []) => {
 		setItems(items);
 	};
 
+	let pageValue = (page: number): void => {
+		setPage(page);
+	};
+
 	useEffect(() => {
 		console.log(items);
-		console.log(searchParams);
-	}, [items, searchParams]);
+		console.log(`page passed ${page}`);
+	}, [items, page]);
 
 	return (
 		<Container>
-			<SearchForm itemsRaw={getValueForm} />
+			<SearchForm itemsRaw={getValueForm} page={pageValue} pagePassed={page} />
+			{items.length > 0 ? <ButtonsForm page={pageValue} /> : ""}
 			<ItemsCard responseValue={items} />
+			{items.length > 0 ? <ButtonsForm page={pageValue} /> : ""}
 		</Container>
 	);
 }

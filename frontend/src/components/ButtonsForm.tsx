@@ -1,43 +1,53 @@
 import React, { useEffect, useState } from "react";
-import ItemsDataServices from "../services/ItemsServices";
 import Button from "react-bootstrap/Button";
-const ButtonsForm = ({ searchValue }: any) => {
-	let [searchParams, setSearchParams] = useState({
-		valueItemName: "",
-		valueSpinner: 0,
-		valueSelector: "",
-		page: 0,
-	});
-
-	function handleSubmit(e: any) {
-		e.preventDefault();
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+class ButtonsForm extends React.Component<
+	{
+		page: (page: number) => void;
+	},
+	{
+		page: number;
+	}
+> {
+	constructor(props: any) {
+		super(props);
+		this.state = {
+			page: 0,
+		};
 	}
 
-	function submitSearch(): Promise<boolean> {
-		ItemsDataServices.getItems(
-			searchParams.valueItemName,
-			searchParams.valueSpinner,
-			searchParams.valueSelector,
-			searchParams.page,
-		)
-			.then((res) => {
-				console.log(res);
-				return Promise.resolve(true);
-			})
-			.catch((e) => {
-				console.error(`Errore :${e}`);
-			});
-		return Promise.resolve(false);
+	render() {
+		return (
+			<div className="buttons-bot">
+				<Row>
+					<Col xs="auto">
+						<Button
+							variant="primary"
+							onClick={(e) => {
+								if (this.state.page > 0) {
+									this.props.page(this.state.page - 1);
+									this.setState({ page: this.state.page - 1 });
+								}
+							}}
+						>
+							Previous page
+						</Button>
+					</Col>
+					<Col xs="auto">
+						<Button
+							variant="primary"
+							onClick={(e) => {
+								this.props.page(this.state.page + 1);
+								this.setState({ page: this.state.page + 1 });
+							}}
+						>
+							Next page
+						</Button>
+					</Col>
+				</Row>
+			</div>
+		);
 	}
-
-	useEffect(() => {
-		setSearchParams(searchValue);
-	}, [searchValue]);
-
-	return (
-		<div className="buttons-bot">
-			<Button variant="primary">Go to the item</Button>
-		</div>
-	);
-};
+}
 export default ButtonsForm;

@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import InputSpinner from "react-bootstrap-input-spinner";
 import ItemsDataServices from "../services/ItemsServices";
-import { isConstructorDeclaration } from "typescript";
+import Spinner from "react-bootstrap/Spinner";
 
 class SearchForm extends React.Component<
 	{
 		itemsRaw: (items: []) => void;
+		page: (page: number) => void;
+		pagePassed: number;
 	},
 	{
 		valueSpinner: number;
@@ -17,6 +19,7 @@ class SearchForm extends React.Component<
 		valueSelector: string;
 		items: [];
 		page: number;
+		stateButtonSearch: string;
 	}
 > {
 	constructor(props: any) {
@@ -27,6 +30,7 @@ class SearchForm extends React.Component<
 			valueSelector: "$eq",
 			items: [],
 			page: 0,
+			stateButtonSearch: "",
 		};
 	}
 
@@ -34,11 +38,13 @@ class SearchForm extends React.Component<
 		e.preventDefault();
 	}
 
-	componentDidUpdate(): void {
-		console.log(this.state.page);
+	componentDidUpdate(prevProps: any): void {
+		if (this.props.pagePassed !== prevProps.pagePassed) {
+			this.setState({ page: this.props.pagePassed }, () => this.submitSearch());
+		}
 	}
 
-	submitSearch(): Promise<boolean> {
+	submitSearch(): void {
 		ItemsDataServices.getItems(
 			this.state.valueItemName,
 			this.state.valueSpinner,
@@ -49,12 +55,11 @@ class SearchForm extends React.Component<
 				console.log(res);
 				this.setState({ items: res.items });
 				this.props.itemsRaw(res.items);
-				return Promise.resolve(true);
+				this.setState({ stateButtonSearch: "" });
 			})
 			.catch((e) => {
 				console.error(`Errore :${e}`);
 			});
-		return Promise.resolve(false);
 	}
 
 	render() {
@@ -101,30 +106,30 @@ class SearchForm extends React.Component<
 						</Form.Select>
 					</Col>
 					<Col xs="auto">
-						<Button
-							variant="primary"
-							type="submit"
-							onClick={(e) => {
-								this.handleSubmit(e);
-								this.submitSearch();
-							}}
-						>
-							Search
-						</Button>
-					</Col>
-					<Col xs="auto">
-						{this.state.items !== undefined && this.state.items.length > 0 ? (
+						{this.state.stateButtonSearch === "" ? (
 							<Button
 								variant="primary"
+								type="submit"
 								onClick={(e) => {
-									this.setState({ page: this.state.page + 1 });
-									this.submitSearch();
+									this.handleSubmit(e);
+									this.setState({ stateButtonSearch: "disabled" }, () =>
+										this.submitSearch(),
+									);
 								}}
 							>
-								Next Page
+								Search
 							</Button>
 						) : (
-							""
+							<Button variant="primary" disabled>
+								<Spinner
+									as="span"
+									animation="border"
+									size="sm"
+									role="status"
+									aria-hidden="true"
+								/>
+								<span className="visually-hidden">Loading...</span>
+							</Button>
 						)}
 					</Col>
 				</Row>
