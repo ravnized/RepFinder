@@ -5,6 +5,7 @@ import Col from "react-bootstrap/Col";
 class ButtonsForm extends React.Component<
 	{
 		page: (page: number) => void;
+		statusResponse: string;
 	},
 	{
 		page: number;
@@ -24,6 +25,7 @@ class ButtonsForm extends React.Component<
 					<Col xs="auto">
 						<Button
 							variant="primary"
+							disabled={this.props.statusResponse === "Wait" ? true : false}
 							onClick={(e) => {
 								if (this.state.page > 0) {
 									this.props.page(this.state.page - 1);
@@ -37,6 +39,7 @@ class ButtonsForm extends React.Component<
 					<Col xs="auto">
 						<Button
 							variant="primary"
+							disabled={this.props.statusResponse === "Wait" ? true : false}
 							onClick={(e) => {
 								this.props.page(this.state.page + 1);
 								this.setState({ page: this.state.page + 1 });

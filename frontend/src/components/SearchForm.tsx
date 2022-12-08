@@ -12,6 +12,7 @@ class SearchForm extends React.Component<
 		itemsRaw: (items: []) => void;
 		page: (page: number) => void;
 		pagePassed: number;
+		watingResponse: (status: string) => void;
 	},
 	{
 		valueSpinner: number;
@@ -45,6 +46,8 @@ class SearchForm extends React.Component<
 	}
 
 	submitSearch(): void {
+		this.props.watingResponse("Wait");
+		this.setState({ stateButtonSearch: "disabled" });
 		ItemsDataServices.getItems(
 			this.state.valueItemName,
 			this.state.valueSpinner,
@@ -55,6 +58,7 @@ class SearchForm extends React.Component<
 				console.log(res);
 				this.setState({ items: res.items });
 				this.props.itemsRaw(res.items);
+				this.props.watingResponse("");
 				this.setState({ stateButtonSearch: "" });
 			})
 			.catch((e) => {

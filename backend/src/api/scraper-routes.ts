@@ -2,7 +2,9 @@ import express from "express";
 import ScraperController from "./scraper-controller";
 
 const router = express.Router();
-router.route("/").get(ScraperController.apiGetItem);
+router.route("/").get((req: any, res: any) => {
+    ScraperController.apiGetItem(req, res)
+});
 router.route("/").post(ScraperController.apiInsertItem);
 router.route("/convert/").post((req: any, res: any, next: any) => {
     ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
@@ -41,6 +43,9 @@ router.route("/incrementOne").get((req: any, res: any, next: any) => {
     return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.apiPopularity(res, req.query.id) : res.json({
         error: "No id"
     })
+})
+router.route("/getPopularity").get((req: any, res: any) => {
+    ScraperController.apiGetPopularity(req, res)
 })
 
 export default router;

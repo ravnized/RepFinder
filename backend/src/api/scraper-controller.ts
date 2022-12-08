@@ -3,8 +3,6 @@ const cheerio = require("cheerio")
 import ScraperDao from "../dao/scraperDao";
 import puppeteer from 'puppeteer';
 import axios from "axios";
-import * as http from 'http';
-import async from "async"
 const Agent = require("agentkeepalive");
 export default class ScraperController {
 
@@ -156,77 +154,9 @@ export default class ScraperController {
 
     }
 
+    static async apiGetImage(responseGetItems: any, itemsPerPage: number, page: number, filters: {}, total_items: number, res: any) {
 
-    static async jsonResponser(itemsPerPage: number, responseGetItems: any, page: any, filters: any, res: any) {
-
-        let response = {
-            code: 200,
-            items: responseGetItems.itemsList,
-            page: page,
-            filters: filters,
-            entries_per_page: itemsPerPage,
-            total_results: responseGetItems.totalItemsLIst,
-        };
-        return res.json(response)
-
-
-
-    }
-    static async apiGetItem(req: any, res: any, next: any) {
         const HttpsAgent = require("agentkeepalive").HttpsAgent;
-        const itemsPerPage = req.query.itemsPerPage
-            ? parseInt(req.query.itemsPerPage, 10)
-            : 20;
-        const page = req.query.page ? parseInt(req.query.page, 10) : 0;
-        interface objectResponse {
-            _id: string,
-            itemName: string,
-            cost: Number,
-            images: string,
-            storeName: string,
-            link: string
-        }
-
-
-        let filters: any = {};
-
-        if (req.query.cost) {
-            filters.cost = req.query.cost;
-            filters.cost[0] = Number(filters.cost[0])
-        }
-
-        if (req.query.itemName) {
-            filters.itemName = req.query.itemName;
-        }
-        if (req.query.storeName) {
-            filters.storeName = req.query.storeName;
-        }
-        if (req.query.$text) {
-            filters.$text = req.query.$text;
-        }
-
-
-
-
-        console.error(`request body: ${JSON.stringify(req.body)} `);
-        console.error(filters);
-
-
-
-
-        let responseGetItems = await ScraperDao.getItems({
-            filters,
-            page,
-            itemsPerPage,
-        })
-
-        if (await responseGetItems.itemsList.length == 0) {
-            return res.json({
-                code: 200,
-                items: []
-            })
-        }
-
         const keepAliveAgent = new Agent({
             keepAlive: true,
             maxSockets: 128, // or 128 / os.cpus().length if running node across multiple CPUs
@@ -248,50 +178,67 @@ export default class ScraperController {
             httpsAgent: httpsKeepAliveAgent,
 
         })
-
         let indexLast: number = 0;
-        responseGetItems.itemsList.map((item: any, index: any) => {
 
-            if (item.images.slice(0, 4) == "data") {
-                item.imageBuffer = item.images;
-                item.images = "";
-                responseGetItems.itemsList[index] = item;
-                indexLast++;
-                if (indexLast == itemsPerPage) {
-                    ScraperController.jsonResponser(itemsPerPage, responseGetItems, page, filters, res)
-                }
-            } else {
-                instance.get(item.images, {
-                    responseType: 'arraybuffer',
-                    headers: {
-                        "Referer": item.link
-                    }
-                }).then((response: any) => {
-                    let buffered = Buffer.from(response.data, 'binary').toString("base64");
-                    item.imageBuffer = buffered;
+        try {
+            responseGetItems.map((item: any, index: any) => {
+
+                if (item.images.slice(0, 4) == "data") {
+                    item.imageBuffer = item.images;
                     item.images = "";
-                    responseGetItems.itemsList[index] = item;
-                    console.log(indexLast)
+                    responseGetItems[index] = item;
                     indexLast++;
-                    console.log(item.itemName);
+
                     if (indexLast == itemsPerPage) {
-                        ScraperController.jsonResponser(itemsPerPage, responseGetItems, page, filters, res)
+                        res.json({
+                            code: 200,
+                            items: responseGetItems,
+                            page: page,
+                            filters: filters,
+                            entries_per_page: itemsPerPage,
+                            total_items: total_items,
+                        })
                     }
+                } else {
+                    instance.get(item.images, {
+                        responseType: 'arraybuffer',
+                        headers: {
+                            "Referer": item.link
+                        }
+                    }).then((response: any) => {
+                        let buffered = Buffer.from(response.data, 'binary').toString("base64");
+                        item.imageBuffer = buffered;
+                        item.images = "";
+                        responseGetItems[index] = item;
+
+                        indexLast++;
+
+                        if (indexLast == itemsPerPage) {
+                            res.json({
+                                code: 200,
+                                items: responseGetItems,
+                                page: page,
+                                filters: filters,
+                                entries_per_page: itemsPerPage,
+
+                            })
+                        }
+                    })
+                }
 
 
+            })
+        } catch (e) {
+            res.json({
+                error: e,
+                status: "failed"
+            })
 
-                })
-            }
-
-
-
-
-
-
-        })
-
+        }
 
     }
+
+
 
     static async apiInsertItem(req: any, res: any, next: any) {
         let itemName = "",
@@ -372,9 +319,49 @@ export default class ScraperController {
                 error: e,
                 status: "failed"
             })
-            console.error(`Problem in inserting order ${e}`);
+            console.error(`Problem in inserting popularity ${e}`);
         }
         res.json(response)
+    }
+
+    static async apiGetPopularity(req: any, res: any) {
+        let responseGetItems = await ScraperDao.getItemByPopularity();
+        console.log(this)
+        return await this.apiGetImage(responseGetItems, 5, 0, {}, 5, res);
+    }
+    static async apiGetItem(req: any, res: any) {
+
+        const itemsPerPage = req.query.itemsPerPage
+            ? parseInt(req.query.itemsPerPage, 10)
+            : 20;
+        const page = req.query.page ? parseInt(req.query.page, 10) : 0;
+
+        let filters: any = {};
+
+        if (req.query.cost) {
+            filters.cost = req.query.cost;
+            filters.cost[0] = Number(filters.cost[0])
+        }
+
+        if (req.query.itemName) {
+            filters.itemName = req.query.itemName;
+        }
+        if (req.query.storeName) {
+            filters.storeName = req.query.storeName;
+        }
+        if (req.query.$text) {
+            filters.$text = req.query.$text;
+        }
+
+
+        console.error(`request body: ${JSON.stringify(req.body)} `);
+        console.error(filters);
+        let responseGetItems = await ScraperDao.getItems({
+            filters,
+            page,
+            itemsPerPage,
+        })
+        return await this.apiGetImage(responseGetItems.itemsList, itemsPerPage, page, filters, responseGetItems.totalItemsList, res)
     }
 
 }

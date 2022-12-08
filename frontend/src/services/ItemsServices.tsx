@@ -10,8 +10,9 @@ class ItemsDataServices {
 		operator: string,
 		page: number,
 	) {
-		let baseUrl = "http://127.0.0.1:5001/api/v1/items";
-		//let baseUrl ="http://backend-repfinder.fqavgjc6anc7awa8.germanywestcentral.azurecontainer.io:5000/api/v1/items";
+		//let baseUrl = "http://127.0.0.1:5001/api/v1/items";
+		let baseUrl =
+			"http://backend-repfinder.fqavgjc6anc7awa8.germanywestcentral.azurecontainer.io:5000/api/v1/items";
 		let finalUrl = baseUrl;
 		finalUrl += `?page=${page}`;
 		if (cost !== 0) {
