@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import "../css/ButtonsForm.css";
 class ButtonsForm extends React.Component<
 	{
 		page: (page: number) => void;
@@ -20,9 +21,9 @@ class ButtonsForm extends React.Component<
 
 	render() {
 		return (
-			<div className="buttons-bot">
+			<div className="buttons-bot paddingButton">
 				<Row>
-					<Col xs="auto">
+					<Col xs={6} xl={6}>
 						<Button
 							variant="primary"
 							disabled={this.props.statusResponse === "Wait" ? true : false}
@@ -36,7 +37,7 @@ class ButtonsForm extends React.Component<
 							Previous page
 						</Button>
 					</Col>
-					<Col xs="auto">
+					<Col xs={6} xl={6}>
 						<Button
 							variant="primary"
 							disabled={this.props.statusResponse === "Wait" ? true : false}

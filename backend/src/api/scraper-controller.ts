@@ -361,6 +361,12 @@ export default class ScraperController {
             page,
             itemsPerPage,
         })
+        if (responseGetItems.itemsList.length == 0) {
+            res.json({
+                code: 200,
+                items: []
+            })
+        }
         return await this.apiGetImage(responseGetItems.itemsList, itemsPerPage, page, filters, responseGetItems.totalItemsList, res)
     }
 

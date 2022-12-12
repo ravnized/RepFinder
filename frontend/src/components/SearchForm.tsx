@@ -6,6 +6,7 @@ import Col from "react-bootstrap/Col";
 import InputSpinner from "react-bootstrap-input-spinner";
 import ItemsDataServices from "../services/ItemsServices";
 import Spinner from "react-bootstrap/Spinner";
+import "../css/SearchForm.css";
 
 class SearchForm extends React.Component<
 	{
@@ -62,13 +63,17 @@ class SearchForm extends React.Component<
 				this.setState({ stateButtonSearch: "" });
 			})
 			.catch((e) => {
+				this.setState({ items: [] });
+				this.props.itemsRaw([]);
+				this.props.watingResponse("");
+				this.setState({ stateButtonSearch: "" });
 				console.error(`Errore :${e}`);
 			});
 	}
 
 	render() {
 		return (
-			<Form>
+			<Form className="paddingSearchForm">
 				<Row>
 					<Col xs="auto">
 						<Form.Group className="mb-3">

@@ -3,49 +3,65 @@ import Container from "react-bootstrap/Container";
 import ItemsCard from "../components/ItemsCard";
 import SearchForm from "../components/SearchForm";
 import ButtonsForm from "../components/ButtonsForm";
-function SearchPage() {
-	let [items, setItems] = useState([]);
-	let [page, setPage] = useState(0);
-	let [status, setStatus] = useState("");
+import "../css/SearchPage.css";
+import React from "react";
+class SearchPage extends React.Component<
+	{},
+	{
+		items: [];
+		page: number;
+		status: string;
+	}
+> {
+	constructor(props: any) {
+		super(props);
+		this.state = {
+			items: [],
+			page: 0,
+			status: "",
+		};
+	}
+	getValueForm(items: []) {
+		this.setState({ items: items });
+	}
 
-	let getValueForm = (items: []) => {
-		setItems(items);
-	};
+	pageValue(page: number) {
+		this.setState({ page: page });
+	}
 
-	let pageValue = (page: number): void => {
-		setPage(page);
-	};
+	waitingResponse(status: string) {
+		this.setState({ status: status });
+	}
 
-	let waitingResponse = (status: string): void => {
-		setStatus(status);
-	};
-
-	useEffect(() => {
-		console.log(items);
-		console.log(`page passed ${page}`);
-	}, [items, page]);
-
-	return (
-		<Container>
-			<SearchForm
-				itemsRaw={getValueForm}
-				page={pageValue}
-				pagePassed={page}
-				watingResponse={waitingResponse}
-			/>
-			{items.length > 0 ? (
-				<ButtonsForm page={pageValue} statusResponse={status} />
-			) : (
-				""
-			)}
-			<ItemsCard responseValue={items} />
-			{items.length > 0 ? (
-				<ButtonsForm page={pageValue} statusResponse={status} />
-			) : (
-				""
-			)}
-		</Container>
-	);
+	render(): React.ReactNode {
+		return (
+			<Container>
+				<SearchForm
+					itemsRaw={(items) => this.getValueForm(items)}
+					page={(page) => this.pageValue(page)}
+					pagePassed={this.state.page}
+					watingResponse={(status) => this.waitingResponse(status)}
+				/>
+				{this.state.items.length > 0 ? (
+					<ButtonsForm
+						page={(page) => this.pageValue(page)}
+						statusResponse={this.state.status}
+					/>
+				) : (
+					""
+				)}
+				<ItemsCard responseValue={this.state.items} />
+				{this.state.items.length > 0 ? (
+					<ButtonsForm
+						page={(page) => this.pageValue(page)}
+						statusResponse={this.state.status}
+					/>
+				) : (
+					""
+				)}
+			</Container>
+		);
+	}
 }
 
 export default SearchPage;

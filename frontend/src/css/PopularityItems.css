@@ -1,0 +1,11 @@
+.cardFont {
+	font-size: small;
+}
+.cardElement {
+	transform: translateY(200px);
+	opacity: 0;
+}
+.ColCard {
+	padding-top: 1rem;
+	padding-bottom: 1rem;
+}
