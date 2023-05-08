@@ -9,8 +9,9 @@ router.route("/").post(ScraperController.apiInsertItem);
 router.route("/convert/").post((req: any, res: any, next: any) => {
     ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
 });
-router.route("/scraper/").post((req: any, res: any, next: any) => {
+router.route("/scraper/").post((req: any, res: any) => {
     let checkPasse = false;
+    console.log(req.body.scraper);
     if (req.body.scraper == "" || req.body.scraper == " " || req.body.scraper == undefined) {
         checkPasse = false
         return res.json({
