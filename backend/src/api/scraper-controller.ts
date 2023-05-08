@@ -16,7 +16,7 @@ export default class ScraperController {
 
             const browser = await puppeteer.launch();
             try {
-                this.spawnerPage(url, filename, browser, finalFile, res)
+                this.convertPage(url, filename, browser, res);
             } catch (e) {
                 console.log(`error ${e}`)
             }
@@ -28,6 +28,35 @@ export default class ScraperController {
             console.log(`error: ${e}`);
         }
 
+    }
+
+    static async convertPage(url: string, filename: string, browser: any, res: any) {
+        let page;
+        let htmlPage;
+        let finalFile = "";
+        try {
+            page = await browser.newPage();
+            await page.goto(url);
+            htmlPage = await page.content();
+            await page.close();
+            let $ = cheerio.load(htmlPage);
+            $('.showindex__children').each((index: number, item: any) => {
+
+                finalFile += $(item).html();
+            })
+
+            fs.writeFile(`./cache/${filename}.txt`, `${finalFile}`, (error: any) => {
+                console.log(error)
+            });
+            await browser.close();
+            return res.json({
+                filename: filename,
+                html: htmlPage,
+                success: "true",
+            })
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     static async spawnerPage(url: string, filename: string, browser: any, finalFile: any, res: any) {
