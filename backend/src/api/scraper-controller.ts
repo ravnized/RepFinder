@@ -20,7 +20,6 @@ export default class ScraperController {
             } catch (e) {
                 console.log(`error ${e}`)
             }
-            // Don't forget to close your browser to release resources
         } catch (e) {
             res.JSON({
                 error: e,

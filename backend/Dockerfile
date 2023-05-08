@@ -10,4 +10,5 @@ RUN mkdir -p /src
 COPY ./src/ /code/src
 COPY tsconfig.json .
 COPY .env .
+EXPOSE 5000
 CMD [ "npm", "run", "dev" ]
