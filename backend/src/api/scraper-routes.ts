@@ -10,21 +10,7 @@ router.route("/").post(ScraperController.apiInsertItem);
 router.route("/convert/").post((req: any, res: any, next: any) => {
     ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
 });
-router.route("/scraper/").post((req: any, res: any) => {
 
-    ScraperController.scraperMain(req.body.scraper, req.body.filename).then((data: any) => {
-        return res.status(200).json({
-            data: data
-        })
-    })
-        .catch((err: any) => {
-            return res.status(500).json({
-                error: err
-            });
-        })
-
-
-});
 
 router.route("/scraperMulti/").post((req: any, res: any) => {
     ScraperController.scraperMulti(req.body, res);

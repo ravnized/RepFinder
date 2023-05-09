@@ -148,62 +148,7 @@ export default class ScraperController {
     }
 
 
-    static async spawnerPage(url: string, filename: string, browser: any, finalFile: any, res: any) {
-
-        let page;
-        let htmlPage;
-        try {
-            page = await browser.newPage();
-            await page.goto(url);
-            htmlPage = await page.content();
-            await page.close();
-            let $ = cheerio.load(htmlPage);
-            let pagination__active_next = $('.pagination__active').next();
-            let pageMax = $('input[name=page]').attr('max');
-
-            console.log(pagination__active_next.text())
-            if (ScraperController.currentPage <= pageMax) {
-                $('.showindex__children').each((index: number, item: any) => {
-
-                    finalFile += $(item).html();
-                })
-
-                console.log(url)
-                if (ScraperController.currentPage <= 9) {
-                    ScraperController.urlMod = url.slice(0, url.length - 1)
-                } else {
-                    ScraperController.urlMod = url.slice(0, url.length - 2)
-                }
-                ScraperController.currentPage++;
-                console.log(ScraperController.urlMod + ScraperController.currentPage)
-                this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
-            } else {
-                fs.writeFile(`./cache/${filename}.txt`, `${finalFile}`, (error: any) => {
-                    console.log(error)
-                });
-                await browser.close();
-                ScraperController.currentPage = 1;
-                ScraperController.urlMod = "";
-                return res.json({
-                    filename: filename,
-                    success: "true",
-                })
-            }
-        } catch (e) {
-            try {
-                this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
-            } catch (e) {
-                res.json({
-                    error: e,
-                    status: "failed"
-                })
-            }
-            console.log(`Error ${e}`)
-        }
-
-
-    }
-
+    
 
     static async converFileToItems(filename: string, url: string, req: any, res: any, next: any) {
 
