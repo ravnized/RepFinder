@@ -4,60 +4,149 @@ import ScraperDao from "../dao/scraperDao";
 import puppeteer from 'puppeteer';
 import axios from "axios";
 const Agent = require("agentkeepalive");
+import UserAgent from 'user-agents';
 export default class ScraperController {
 
     static currentPage = 1;
     static urlMod = "";
 
-    static async scraperMain(url: string, filename: string, res: any) {
-        let finalFile = "";
-
-        try {
-
-            const browser = await puppeteer.launch();
-            try {
-                this.convertPage(url, filename, browser, res);
-            } catch (e) {
-                console.log(`error ${e}`)
-            }
-        } catch (e) {
-            res.JSON({
-                error: e,
-                status: "failed"
+    static async scraperMulti(arrayInfo: [{ scraper: string, filename: string }], res: any) {
+        Promise.all(arrayInfo.map(async (data: { scraper: string, filename: string }) => {
+            return await this.scraperMain(data.scraper, data.filename)
+        })).then((data: any) => {
+            return res.status(200).json({
+                data: data
             })
-            console.log(`error: ${e}`);
+        })
+            .catch((err: any) => {
+                return res.status(500).json({
+                    error: err
+                });
+            });
+    }
+
+
+
+    static async scraperMain(url: string, filename: string): Promise<{ message: string }> {
+        let pageMax: number;
+        pageMax = 0;
+        let count = 0;
+        let browser = await puppeteer.launch({
+            headless: false
+        });
+
+        pageMax = await this.getPageMax(url, browser);
+        //generate an array with all the urls to scrape
+        let urls: string[] = [];
+        //https://chaosmade.x.yupoo.com/albums
+        for (let i = 1; i <= pageMax; i++) {
+            urls.push(`${url}?page=${i}`);
         }
+        let promises = [];
+
+
+        do {
+            promises = urls.splice(0, 20);
+
+            console.log(promises);
+            // 20 at a time
+            await Promise.all(promises.map(async (url: string, index: number) => {
+                await this.convertPage(url, browser)
+                    .then(async (data: any) => {
+                        console.log(`creating file ${filename} ${index + 1 + (count * 20)}`)
+                        await this.createFile(filename, index + 1 + (count * 20), data.message)
+                    })
+                    .catch((err: any) => {
+                        return Promise.reject({
+                            message: `${err}`,
+                        });
+                    })
+            }))
+            count++;
+
+        } while (urls.length)
+        await browser.close();
+        return Promise.resolve({
+            message: `Finito ${filename}`
+        })
+
+
+
+
+
 
     }
 
-    static async convertPage(url: string, filename: string, browser: any, res: any) {
+    static async createFile(dirName: string, filename: number, content: string): Promise<{ message: string }> {
+        try {
+            if (!fs.existsSync(`./cache/${dirName}`)) {
+                fs.mkdirSync(`./cache/${dirName}`);
+            }
+            fs.writeFileSync(`./cache/${dirName}/${filename}`, `${content}`);
+            return Promise.resolve({
+                message: "File created"
+            })
+        } catch (e) {
+            console.log(e);
+            return Promise.reject({
+                message: `${e}`,
+            })
+        }
+    }
+
+    static async convertPage(url: string, browser: any): Promise<{ message: string }> {
+
+        const userAgent = new UserAgent({ deviceCategory: 'mobile' });
         let page;
         let htmlPage;
         let finalFile = "";
+        let $ = cheerio.load("");
         try {
+            console.log(`visiting: ${url} with user agent: ${userAgent.toString()}`);
             page = await browser.newPage();
+            await page.setUserAgent(userAgent.toString());
+            await page.setDefaultNavigationTimeout(0);
+            await page.goto(url);
+            htmlPage = await page.content();
+            await page.close();
+            $ = cheerio.load(htmlPage);
+            $('.showindex__children').each((index: number, item: any) => {
+                finalFile += $(item).html();
+            })
+
+        } catch (e) {
+            console.log(e);
+            return Promise.reject({
+                message: `${e}`,
+            })
+        }
+        console.log(`visited: ${url}`);
+        return Promise.resolve({
+            message: finalFile,
+        })
+
+    }
+
+    static async getPageMax(url: string, browser: any) {
+        const userAgent = new UserAgent({ deviceCategory: 'mobile' });
+        let page;
+        let htmlPage;
+        try {
+
+            page = await browser.newPage();
+            await page.setUserAgent(userAgent.toString());
             await page.goto(url);
             htmlPage = await page.content();
             await page.close();
             let $ = cheerio.load(htmlPage);
-            $('.showindex__children').each((index: number, item: any) => {
-
-                finalFile += $(item).html();
-            })
-
-            fs.writeFile(`./cache/${filename}.txt`, `${finalFile}`, (error: any) => {
-                console.log(error)
-            });
-            await browser.close();
-            return res.json({
-                filename: filename,
-                html: htmlPage,
-                success: "true",
-            })
+            let pageMax = $('input[name=page]').attr('max');
+            return pageMax;
         } catch (e) {
             console.log(e);
+
         }
     }
+
 
     static async spawnerPage(url: string, filename: string, browser: any, finalFile: any, res: any) {
 
@@ -114,6 +203,7 @@ export default class ScraperController {
 
 
     }
+
 
     static async converFileToItems(filename: string, url: string, req: any, res: any, next: any) {
 

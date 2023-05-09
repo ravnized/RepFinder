@@ -1,5 +1,6 @@
 import express from "express";
 import ScraperController from "./scraper-controller";
+import { any } from "async";
 
 const router = express.Router();
 router.route("/").get((req: any, res: any) => {
@@ -10,29 +11,25 @@ router.route("/convert/").post((req: any, res: any, next: any) => {
     ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
 });
 router.route("/scraper/").post((req: any, res: any) => {
-    let checkPasse = false;
-    console.log(req.body.scraper);
-    if (req.body.scraper == "" || req.body.scraper == " " || req.body.scraper == undefined) {
-        checkPasse = false
-        return res.json({
-            error: "No url"
+
+    ScraperController.scraperMain(req.body.scraper, req.body.filename).then((data: any) => {
+        return res.status(200).json({
+            data: data
         })
-    } else {
-        checkPasse = true
-    }
-    if (req.body.filename == "" || req.body.filename == " " || req.body.filename == undefined) {
-        checkPasse = false
-        return res.json({
-            error: "No filename"
+    })
+        .catch((err: any) => {
+            return res.status(500).json({
+                error: err
+            });
         })
-    } else {
-        checkPasse = true
-    }
-    if (checkPasse == true) {
-        ScraperController.scraperMain(req.body.scraper, req.body.filename, res);
-    }
+
 
 });
+
+router.route("/scraperMulti/").post((req: any, res: any) => {
+    ScraperController.scraperMulti(req.body, res);
+});
+
 router.route("/searchByID").get((req: any, res: any, next: any) => {
     console.log(req.query.id)
     return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.apiGetItemById(res, req.query.id) : res.json({
