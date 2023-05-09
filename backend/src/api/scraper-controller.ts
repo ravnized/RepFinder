@@ -79,6 +79,10 @@ export default class ScraperController {
 
     static async createFile(dirName: string, filename: number, content: string): Promise<{ message: string }> {
         try {
+            if (!fs.existsSync(`./cache`)) {
+                fs.mkdirSync(`./cache`);
+            }
+
             if (!fs.existsSync(`./cache/${dirName}`)) {
                 fs.mkdirSync(`./cache/${dirName}`);
             }
@@ -147,8 +151,106 @@ export default class ScraperController {
         }
     }
 
+    static async getResponseFromItem($: any, item: any, directory: string, fileRead: string, file: string): Promise<{
+        itemName: String,
+        cost: Number,
+        image: String,
+        storeName: String,
+        link: String,
+    } | { error: String }> {
+        let regexTitle = new RegExp("\\d{1,}");
+        let prezzoRegex = new RegExp("[^￥🔥](?<!\\d)(?<!\\s)\\D+", 'gi');
+        let regexPhoto = new RegExp(`album.{1,}wrap`);
+        //console.log all the params
+        let title = $(item).attr("title");
+        let link = $(item).attr("href");
+        link = `https://${directory}.x.yupoo.com${link}`;
+        let arrayCost = regexTitle.exec(title)
+        if (arrayCost == null) {
+            return Promise.reject({
+                error: `link: ${link} file: ${file}`
+            });
+        }
+        let titleFinal = prezzoRegex.exec(title)
+        if (titleFinal == null) {
+            return Promise.reject({
+                error: `item: ${titleFinal} cost: ${arrayCost} link: ${link} file: ${file}`
+            });
+        }
+        let arrayAlbumPhoto = regexPhoto.exec(fileRead);
+        let photo = $(item).find(`.${arrayAlbumPhoto![0]} img`);
 
-    
+        let linkPhoto = "";
+
+        console.log(`item: ${titleFinal} cost: ${arrayCost} link: ${link} photo: ${photo}`);
+
+        linkPhoto = photo.attr("data-origin-src");
+        if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
+            linkPhoto = photo.attr("src");
+
+            if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
+                linkPhoto = photo.attr("data-src");
+
+            }
+        }
+        if (linkPhoto.slice(0, 4) !== "data") {
+            linkPhoto = "https:" + linkPhoto;
+        }
+        let response = {
+            itemName: titleFinal![0],
+            cost: Number.parseInt(arrayCost![0]),
+            image: linkPhoto,
+            storeName: directory,
+            link: link,
+        }
+        return Promise.resolve(response);
+    }
+
+
+    static async converterFilesToItems(): Promise<{
+        itemName: String,
+        cost: Number,
+        image: String,
+        storeName: String,
+        link: String,
+    }[] | { error: String }> {
+        let arrayDir = fs.readdirSync(`./cache`);
+
+
+        let arrayAlbumRegex = new RegExp(`album.{1,}main`);
+        let arrayItemRegex = new RegExp(`item.{1,}main`);
+        let arrayData = [{
+            itemName: "", cost: 0, image: "", storeName: "", link: ""
+        }]; try {
+            arrayDir.forEach(async (directory: string) => {
+                let arrayFile = fs.readdirSync(`./cache/${directory}`);
+                arrayFile.forEach(async (file: string) => {
+                    let fileRead = fs.readFileSync(`./cache/${directory}/${file}`)
+                    const $ = cheerio.load(fileRead);
+                    let arrayAlbum = arrayAlbumRegex.exec(fileRead);
+                    let arrayItem = arrayItemRegex.exec(fileRead);
+
+                    Promise.all($(`.${arrayAlbum![0]}`).map(async (index: number, item: any) => {
+
+                        await this.getResponseFromItem($, item, directory, fileRead, file).then((response: any) => {
+                            arrayData.push(response);
+                        }).catch((e: any) => {
+                            console.log(e);
+                        })
+                    }))
+                })
+            })
+        } catch (e) {
+            return Promise.reject({
+                error: `${e}`,
+            });
+        }
+        return Promise.resolve(arrayData);
+    }
+
+
+
+
 
     static async converFileToItems(filename: string, url: string, req: any, res: any, next: any) {
 
@@ -166,8 +268,8 @@ export default class ScraperController {
             let link = $(item).attr("href");
             link = url + link;
 
-            var regex = new RegExp("\\d{1,}");
-            let array = regex.exec(title)
+
+            let array = RegExp("").exec(title)
             if (array == null) {
                 return;
             }
@@ -199,6 +301,7 @@ export default class ScraperController {
 
                 console.log(linkPhoto)
             }
+
 
             let response = {
                 itemName: titleFinal![0],

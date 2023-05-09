@@ -10,7 +10,11 @@ router.route("/").post(ScraperController.apiInsertItem);
 router.route("/convert/").post((req: any, res: any, next: any) => {
     ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
 });
-
+router.route("/converter/").post((req: any, res: any) => {
+    ScraperController.converterFilesToItems().then((result: any) => {
+        res.status(200).json(result)
+    });
+});
 
 router.route("/scraperMulti/").post((req: any, res: any) => {
     ScraperController.scraperMulti(req.body, res);
