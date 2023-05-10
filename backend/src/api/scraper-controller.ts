@@ -113,7 +113,9 @@ export default class ScraperController {
             page = await browser.newPage();
             await page.setUserAgent(userAgent.toString());
             await page.setDefaultNavigationTimeout(0);
-            await page.goto(url);
+            await page.goto(url, {
+                'timeout': 0,
+            });
             htmlPage = await page.content();
             await page.close();
             $ = cheerio.load(htmlPage);
