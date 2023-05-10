@@ -12,10 +12,7 @@ export default class ScraperDao {
         if (items) return;
         try {
             items = await conn.db("Main").collection("Items");
-            await conn.db("Main").collection("Items").createIndex({
-                itemName: "text"
-            })
-
+           
             //await conn.db("Main").collection("Items").deleteMany({})
             console.log(`Items collection initialized`);
         } catch (e) {

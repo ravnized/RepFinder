@@ -7,12 +7,14 @@ router.route("/").get((req: any, res: any) => {
     ScraperController.apiGetItem(req, res)
 });
 router.route("/").post(ScraperController.apiInsertItem);
-router.route("/convert/").post((req: any, res: any, next: any) => {
+router.route("/convert/").get((req: any, res: any, next: any) => {
     ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
 });
-router.route("/converter/").post((req: any, res: any) => {
+router.route("/converter/").get((req: any, res: any) => {
     ScraperController.converterFilesToItems().then((result: any) => {
         res.status(200).json(result)
+    }).catch((err: any) => {
+        res.status(500).json(err)
     });
 });
 

@@ -10,9 +10,9 @@ export default class ScraperController {
     static currentPage = 1;
     static urlMod = "";
 
-    static async scraperMulti(arrayInfo: [{ scraper: string, filename: string }], res: any) {
-        Promise.all(arrayInfo.map(async (data: { scraper: string, filename: string }) => {
-            return await this.scraperMain(data.scraper, data.filename)
+    static async scraperMulti(arrayInfo: [{ url: string, filename: string }], res: any) {
+        Promise.all(arrayInfo.map(async (data: { url: string, filename: string }) => {
+            return await this.scraperMain(data.url, data.filename)
         })).then((data: any) => {
             return res.status(200).json({
                 data: data
@@ -32,7 +32,7 @@ export default class ScraperController {
         pageMax = 0;
         let count = 0;
         let browser = await puppeteer.launch({
-            headless: false
+            headless: true
         });
 
         pageMax = await this.getPageMax(url, browser);
@@ -82,11 +82,14 @@ export default class ScraperController {
             if (!fs.existsSync(`./cache`)) {
                 fs.mkdirSync(`./cache`);
             }
-
-            if (!fs.existsSync(`./cache/${dirName}`)) {
-                fs.mkdirSync(`./cache/${dirName}`);
+            if (!fs.existsSync(`./cache/stores`)) {
+                fs.mkdirSync(`./cache/stores`);
             }
-            fs.writeFileSync(`./cache/${dirName}/${filename}`, `${content}`);
+
+            if (!fs.existsSync(`./cache/stores/${dirName}`)) {
+                fs.mkdirSync(`./cache/stores/${dirName}`);
+            }
+            fs.writeFileSync(`./cache/stores/${dirName}/${filename}`, `${content}`);
             return Promise.resolve({
                 message: "File created"
             })
@@ -114,6 +117,16 @@ export default class ScraperController {
             htmlPage = await page.content();
             await page.close();
             $ = cheerio.load(htmlPage);
+            if (htmlPage.includes("404 Not Found")) {
+                return Promise.reject({
+                    message: `404 Not Found`,
+                })
+            }
+            if (htmlPage == "") {
+                return Promise.reject({
+                    message: `Empty page`,
+                })
+            }
             $('.showindex__children').each((index: number, item: any) => {
                 finalFile += $(item).html();
             })
@@ -151,101 +164,117 @@ export default class ScraperController {
         }
     }
 
-    static async getResponseFromItem($: any, item: any, directory: string, fileRead: string, file: string): Promise<{
-        itemName: String,
-        cost: Number,
-        image: String,
-        storeName: String,
-        link: String,
-    } | { error: String }> {
-        let regexTitle = new RegExp("\\d{1,}");
-        let prezzoRegex = new RegExp("[^￥🔥](?<!\\d)(?<!\\s)\\D+", 'gi');
-        let regexPhoto = new RegExp(`album.{1,}wrap`);
-        //console.log all the params
-        let title = $(item).attr("title");
-        let link = $(item).attr("href");
-        link = `https://${directory}.x.yupoo.com${link}`;
-        let arrayCost = regexTitle.exec(title)
-        if (arrayCost == null) {
-            return Promise.reject({
-                error: `link: ${link} file: ${file}`
+    static async getResponseFromItem(directory: string): Promise<{
+        itemName: string,
+        cost: number,
+        image: string,
+        storeName: string,
+        link: string,
+    }[] | { error: string }> {
+        let responseArray = [{
+            itemName: "",
+            cost: 0,
+            image: "",
+            storeName: "",
+            link: "",
+        }]
+        try {
+            let arrayAlbumRegex = new RegExp(`album.{1,}main"`);
+            let arrayFile = fs.readdirSync(`./cache/stores/${directory}`);
+            let regexPrice = new RegExp("\\d{1,}");
+            let regexPhoto = new RegExp(`album.{1,}wrap`);
+            arrayFile.forEach((file: string) => {
+                let fileRead = fs.readFileSync(`./cache/stores/${directory}/${file}`)
+                const $ = cheerio.load(fileRead);
+                let arrayAlbum = arrayAlbumRegex.exec(fileRead);
+                let arrayAlbumSliced = arrayAlbum![0].slice(0, -1)
+
+                $(`.${arrayAlbumSliced}`).each((index: number, item: any) => {
+                    let title = $(item).attr("title");
+                    let link = $(item).attr("href");
+                    link = `https://${directory}.x.yupoo.com${link}`;
+                    let arrayCost: RegExpExecArray | string[] | null = regexPrice.exec(title);
+                    arrayCost == null ? arrayCost = ["999"] : arrayCost[0] = arrayCost[0];
+                    let titleFinal = title
+                    let arrayAlbumPhoto = regexPhoto.exec(fileRead);
+                    let photo = $(item).find(`.${arrayAlbumPhoto![0]} img`);
+
+                    let linkPhoto = "";
+
+                    Object.keys(photo[0].attribs).map(
+                        (name: string) => {
+                            if (name == "data" || name.includes("src") || name == "data-src") {
+                                linkPhoto = photo[0].attribs[name];
+                                if (linkPhoto.slice(0, 4) !== "data") linkPhoto = "https:" + linkPhoto;
+                            } else {
+                                linkPhoto = "no photo found";
+                            }
+                        }
+                    )
+                    /*
+                    ((name: string) => {
+                        if (name.includes("data") || name.includes("src")) {
+                            console.log(name);
+                        }
+                    })
+                    */
+                    console.log(`item: ${titleFinal} cost: ${arrayCost} link: ${link} photo: ${linkPhoto} file: ${file}`);
+
+                    let response = {
+                        itemName: titleFinal,
+                        cost: Number.parseInt(arrayCost![0]),
+                        image: linkPhoto,
+                        storeName: directory,
+                        link: link.replace(/\s/g, ""),
+                    }
+                    console.log(response);
+                    responseArray.push(response);
+                });
+
             });
-        }
-        let titleFinal = prezzoRegex.exec(title)
-        if (titleFinal == null) {
+
+        } catch (e) {
+            console.log(e);
             return Promise.reject({
-                error: `item: ${titleFinal} cost: ${arrayCost} link: ${link} file: ${file}`
-            });
+                error: `${e}`,
+            })
         }
-        let arrayAlbumPhoto = regexPhoto.exec(fileRead);
-        let photo = $(item).find(`.${arrayAlbumPhoto![0]} img`);
-
-        let linkPhoto = "";
-
-        console.log(`item: ${titleFinal} cost: ${arrayCost} link: ${link} photo: ${photo}`);
-
-        linkPhoto = photo.attr("data-origin-src");
-        if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
-            linkPhoto = photo.attr("src");
-
-            if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
-                linkPhoto = photo.attr("data-src");
-
-            }
-        }
-        if (linkPhoto.slice(0, 4) !== "data") {
-            linkPhoto = "https:" + linkPhoto;
-        }
-        let response = {
-            itemName: titleFinal![0],
-            cost: Number.parseInt(arrayCost![0]),
-            image: linkPhoto,
-            storeName: directory,
-            link: link,
-        }
-        return Promise.resolve(response);
+        return Promise.resolve(responseArray);
     }
 
 
     static async converterFilesToItems(): Promise<{
-        itemName: String,
-        cost: Number,
-        image: String,
-        storeName: String,
-        link: String,
-    }[] | { error: String }> {
-        let arrayDir = fs.readdirSync(`./cache`);
-
-
-        let arrayAlbumRegex = new RegExp(`album.{1,}main`);
-        let arrayItemRegex = new RegExp(`item.{1,}main`);
+        message: String
+    } | { error: String }> {
+        let arrayDir = fs.readdirSync(`./cache/stores`);
         let arrayData = [{
             itemName: "", cost: 0, image: "", storeName: "", link: ""
-        }]; try {
-            arrayDir.forEach(async (directory: string) => {
-                let arrayFile = fs.readdirSync(`./cache/${directory}`);
-                arrayFile.forEach(async (file: string) => {
-                    let fileRead = fs.readFileSync(`./cache/${directory}/${file}`)
-                    const $ = cheerio.load(fileRead);
-                    let arrayAlbum = arrayAlbumRegex.exec(fileRead);
-                    let arrayItem = arrayItemRegex.exec(fileRead);
+        }];
 
-                    Promise.all($(`.${arrayAlbum![0]}`).map(async (index: number, item: any) => {
 
-                        await this.getResponseFromItem($, item, directory, fileRead, file).then((response: any) => {
-                            arrayData.push(response);
-                        }).catch((e: any) => {
-                            console.log(e);
-                        })
-                    }))
+
+        await Promise.all(arrayDir.map(async (directory: string) => {
+            return await this.getResponseFromItem(directory).then((response) => {
+                fs.writeFileSync(`./cache/${directory}.json`, JSON.stringify(response));
+            }).catch((e) => {
+                return Promise.reject({
+                    error: `${e}`,
                 })
             })
-        } catch (e) {
+        })).catch((e) => {
+            console.log(e);
             return Promise.reject({
                 error: `${e}`,
             });
-        }
-        return Promise.resolve(arrayData);
+        })
+
+
+
+
+
+        return Promise.resolve({
+            message: "Converter completed",
+        });
     }
 
 
@@ -257,9 +286,9 @@ export default class ScraperController {
         let responseTotalDebug = "";
         let responseTotal: any[] = [];
         let indexAddedItems = 0;
-        const $ = cheerio.load(fs.readFileSync(`./cache/${filename}.txt`));
-        var regexAlbum = new RegExp(`album.{1,}main`)
-        let arrayAlbum = regexAlbum.exec(fs.readFileSync(`./cache/${filename}.txt`));
+        const $ = cheerio.load(fs.readFileSync(`./ cache / ${filename}.txt`));
+        var regexAlbum = new RegExp(`album.{ 1, }main`)
+        let arrayAlbum = regexAlbum.exec(fs.readFileSync(`./ cache / ${filename}.txt`));
 
         $(`.${arrayAlbum![0]}`).each(async (index: number, item: any) => {
             let finished = false;
@@ -280,8 +309,8 @@ export default class ScraperController {
                 return;
             }
             let arrayPhoto: any[] = [];
-            let regexPhoto = new RegExp(`album.{1,}wrap`)
-            let arrayAlbumPhoto = regexPhoto.exec(fs.readFileSync(`./cache/${filename}.txt`))
+            let regexPhoto = new RegExp(`album.{ 1, }wrap`)
+            let arrayAlbumPhoto = regexPhoto.exec(fs.readFileSync(`./ cache / ${filename}.txt`))
             let linkPhoto = "";
             let image;
 
@@ -314,7 +343,7 @@ export default class ScraperController {
             indexAddedItems++;
             responseTotalDebug += `Inserting ${response.itemName}, cost: ${response.cost}, images: ${response.images} storeName: ${filename} \n`;
         })
-        fs.writeFileSync(`log-${filename}.txt`, responseTotalDebug)
+        fs.writeFileSync(`log - ${filename}.txt`, responseTotalDebug)
 
         this.apiInsertItems(req, res, next, responseTotal)
 
