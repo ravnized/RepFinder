@@ -7,17 +7,29 @@ interface filtersArray {
 
 export default class ScraperDao {
 
-
+    static connectionDB: any;
     static async connDB(conn: any) {
+        this.connectionDB = conn;
         if (items) return;
         try {
-            items = await conn.db("Main").collection("Items");
-           
-            //await conn.db("Main").collection("Items").deleteMany({})
+            items = await conn.db("Main").collection("Items")
+            await conn.db("Main").collection("Items").createIndex({
+                idItem: "text"
+            }, { unique: true });
             console.log(`Items collection initialized`);
         } catch (e) {
             console.error(`unable to enstablish a collection handle ${e}`);
         }
+    }
+
+    static async deleteAllItems(): Promise<{ message: string } | { error: string }> {
+        try {
+
+            await this.connectionDB.db("Main").collection("Items").deleteMany({});
+        } catch (e) {
+            return Promise.reject({ error: `Error in deleting Items: ${e}` })
+        }
+        return { message: "Items deleted" }
     }
 
     static async getItems({
@@ -99,29 +111,21 @@ export default class ScraperDao {
     }
 
     static async getItemByID(
-        itemName = "",
+        idItem = "",
     ): Promise<any> {
-        var ObjectId = require('mongodb').ObjectId;
+
         let query = {
-            _id: "",
+            idItem: "",
         }
-
-
-        query._id = new ObjectId(itemName)
+        query.idItem = idItem
         let cursor: any;
         let itemsList: any;
         try {
-
             cursor = await items.find(query);
-
-
-
-
         } catch (e) {
             console.log(`Error handling: ${e}`)
 
         }
-
         const displayCursor = cursor
             .limit(20)
             .skip(20 * 0);
@@ -132,47 +136,61 @@ export default class ScraperDao {
             console.log(`Error handling: ${e}`)
         }
 
-        let response = itemsList
+        let response = itemsList[0];
         return response;
 
     }
 
 
+
     static async insertItem({
         itemName = "",
         cost = 0,
-        images = [],
-        storeName = ""
-    } = {}): Promise<any> {
+        image = "",
+        storeName = "",
+        idItem = "",
+        link = "",
+        popularity = 0,
+    } = {}): Promise<{
+        error: string
+    } | JSON
+    > {
         let item: any;
         let cursor: any;
 
         item = {
             itemName,
             cost,
-            images,
-            storeName
+            idItem,
+            image,
+            link,
+            storeName,
+            popularity,
         };
 
         try {
-            console.log(item);
-            cursor = items.insertOne(item);
-            return cursor;
-        } catch (e) {
-            console.log(`Unable to insert order, ${e}`);
-            return (item = {});
+            cursor = await items.insertOne(item);
+
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Unable to insert order, ${e}`,
+            });
         }
+        return Promise.resolve(cursor);
     }
 
-    static async insertItems(objectFromResponse: any): Promise<any> {
-        let cursor: any;
+    static async insertItems(objectFromResponse: [{}]): Promise<{} | { error: string }> {
+        let cursor: {};
+
         try {
-            cursor = items.insertMany(objectFromResponse);
-            return cursor;
+            cursor = await items.insertMany(objectFromResponse);
+
         } catch (e) {
-            console.log(`Unable to insert order, ${e}`);
-            return (objectFromResponse = [{}]);
+            return Promise.reject({
+                error: `Unable to insert order, ${e}`,
+            });
         }
+        return Promise.resolve(cursor);
     }
 
 
