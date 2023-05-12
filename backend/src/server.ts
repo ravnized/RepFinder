@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import ScraperDao from "./dao/scraperDao";
 import scraperRoutes from "./api/scraper-routes";
+import UsersDao from "./dao/usersDao";
 const app = express();
 declare var process: {
 	env: {
@@ -26,9 +27,7 @@ mongoClient
 	.then(async (connection: any) => {
 		app.listen(process.env.PORT || 5001, "0.0.0.0", () => console.log("Server started"));
 		await ScraperDao.connDB(connection);
-		//let scraper = new ScraperDao();
-		//await scraper.getResponseData("https://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
-
+		await UsersDao.connDB(connection);
 	});
 
 

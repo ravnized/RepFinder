@@ -5,30 +5,36 @@ import puppeteer from 'puppeteer';
 import axios from "axios";
 const Agent = require("agentkeepalive");
 import UserAgent from 'user-agents';
-import { response } from "express";
 export default class ScraperController {
 
     static currentPage = 1;
     static urlMod = "";
 
-    static async scraperMulti(arrayInfo: [{ url: string, filename: string }], res: any) {
-        Promise.all(arrayInfo.map(async (data: { url: string, filename: string }) => {
-            return await this.scraperMain(data.url, data.filename)
-        })).then((data: any) => {
-            return res.status(200).json({
-                data: data
+    /**
+     * @param arrayInfo array of objects with url and filename passed from the client
+     * @returns a promise with a message
+     * @description this is the creator of each scraper, the number of scraper is equal to the number of objects in the array
+     */
+    static async scraperMulti(arrayInfo: [{ url: string, filename: string }]): Promise<{}> {
+        await Promise.all(arrayInfo.map(async (data: { url: string, filename: string }) => {
+            return await this.scraperMain(data.url, data.filename).catch((err: any) => {
+                return Promise.reject(err)
             })
+        })).catch((err: any) => {
+            return Promise.reject(err)
         })
-            .catch((err: any) => {
-                return res.status(500).json({
-                    error: err
-                });
-            });
+        return Promise.resolve({ message: "Scraping completed" })
     }
 
 
-
-    static async scraperMain(url: string, filename: string): Promise<{ message: string }> {
+    /**
+     * 
+     * @param url string of the url to scrape es: https://chaosmade.x.yupoo.com/albums
+     * @param filename string of the filename to create es: chaosmade
+     * @returns Promise with a message
+     * @description function that manage all the pages of the url passed
+     */
+    static async scraperMain(url: string, filename: string): Promise<{}> {
         let pageMax: number;
         pageMax = 0;
         let count = 0;
@@ -58,9 +64,7 @@ export default class ScraperController {
                         await this.createFile(filename, index + 1 + (count * 20), data.message)
                     })
                     .catch((err: any) => {
-                        return Promise.reject({
-                            message: `${err}`,
-                        });
+                        return Promise.reject(err);
                     })
             }))
             count++;
@@ -77,8 +81,15 @@ export default class ScraperController {
 
 
     }
-
-    static async createFile(dirName: string, filename: number, content: string): Promise<{ message: string }> {
+    /**
+     * 
+     * @param dirName string of the directory name
+     * @param filename number of the filename
+     * @param content string of the content to write in the file
+     * @returns promise with a message
+     * @description function that create a file in the cache folder check if the cache folder exists and stores exists
+     */
+    static async createFile(dirName: string, filename: number, content: string): Promise<{}> {
         try {
             if (!fs.existsSync(`./cache`)) {
                 fs.mkdirSync(`./cache`);
@@ -91,18 +102,22 @@ export default class ScraperController {
                 fs.mkdirSync(`./cache/stores/${dirName}`);
             }
             fs.writeFileSync(`./cache/stores/${dirName}/${filename}`, `${content}`);
-            return Promise.resolve({
-                message: "File created"
-            })
-        } catch (e) {
-            console.log(e);
-            return Promise.reject({
-                message: `${e}`,
-            })
-        }
-    }
 
-    static async convertPage(url: string, browser: any): Promise<{ message: string }> {
+        } catch (e) {
+            return Promise.reject(e)
+        }
+        return Promise.resolve({
+            message: "File created"
+        })
+    }
+    /**
+     * 
+     * @param url string of the url to scrape
+     * @param browser puppeteer browser
+     * @returns Promise with a message
+     * @description function that scrape the page and return the html of the page
+     */
+    static async convertPage(url: string, browser: any): Promise<{}> {
 
         const userAgent = new UserAgent({ deviceCategory: 'mobile' });
         let page;
@@ -136,9 +151,7 @@ export default class ScraperController {
 
         } catch (e) {
             console.log(e);
-            return Promise.reject({
-                message: `${e}`,
-            })
+            return Promise.reject(e)
         }
         console.log(`visited: ${url}`);
         return Promise.resolve({
@@ -146,11 +159,18 @@ export default class ScraperController {
         })
 
     }
-
-    static async getPageMax(url: string, browser: any) {
+    /**
+     * 
+     * @param url string of the url to scrape
+     * @param browser puppeteer browser
+     * @returns promise with the number of pages
+     * @description function that return the number of pages of the url passed
+     */
+    static async getPageMax(url: string, browser: any): Promise<number> {
         const userAgent = new UserAgent({ deviceCategory: 'mobile' });
         let page;
         let htmlPage;
+        let pageMax: number;
         try {
 
             page = await browser.newPage();
@@ -159,14 +179,20 @@ export default class ScraperController {
             htmlPage = await page.content();
             await page.close();
             let $ = cheerio.load(htmlPage);
-            let pageMax = $('input[name=page]').attr('max');
-            return pageMax;
+            pageMax = $('input[name=page]').attr('max');
+
         } catch (e) {
-            console.log(e);
+            return Promise.reject(0);
 
         }
+        return Promise.resolve(pageMax);
     }
-
+    /**
+     * Core function of the scraper
+     * @param directory string of the directory name
+     * @returns Promise with an array of items or an error
+     * @description function that return an array of items from the directory passed
+     */
     static async getResponseFromItem(directory: string): Promise<{
         itemName: string,
         cost: number,
@@ -181,6 +207,7 @@ export default class ScraperController {
             image: string,
             storeName: string,
             link: string,
+            popularity: number,
         }] = [{
             itemName: "",
             idItem: "",
@@ -188,6 +215,7 @@ export default class ScraperController {
             image: "",
             storeName: "",
             link: "",
+            popularity: 0,
         }]
 
         try {
@@ -195,7 +223,7 @@ export default class ScraperController {
             let arrayFile = fs.readdirSync(`./cache/stores/${directory}`);
             let regexPrice = new RegExp("\\d{1,}");
             let regexPhoto = new RegExp(`album.{1,}wrap`);
-            let regexAlbumId = new RegExp('\\/albums\\/(\\d+)\\?uid', '');
+            let regexAlbumId = new RegExp('\\/albums\\/(\\d+)\\?uid', '')
             arrayFile.forEach((file: string) => {
                 let fileRead = fs.readFileSync(`./cache/stores/${directory}/${file}`)
                 const $ = cheerio.load(fileRead);
@@ -206,7 +234,15 @@ export default class ScraperController {
                     let title = $(item).attr("title");
                     if (title == "more") return;
                     let link = $(item).attr("href");
-                    let idAlbum = regexAlbumId.exec(link);
+                    let idAlbum = $(item).attr("data-album-id");
+
+                    if (idAlbum == undefined) {
+                        idAlbum = regexAlbumId.exec(link);
+                        idAlbum = idAlbum![1];
+                    } else {
+                        idAlbum = idAlbum.replace(`-`, ``);
+                    }
+
                     link = `https://${directory}.x.yupoo.com${link}`;
                     let arrayCost: RegExpExecArray | string[] | null = regexPrice.exec(title);
                     arrayCost == null ? arrayCost = ["999"] : arrayCost[0] = arrayCost[0];
@@ -218,34 +254,25 @@ export default class ScraperController {
 
                     Object.keys(photo[0].attribs).map(
                         (name: string) => {
-
-                            if (name == "data" || name == "src" || name == "data-src") {
-
-                                if (photo[0].attribs[name].replace(/\s/g, "") !== "") {
+                            if (name == "data" || name == "src" || name == "data-src" || name == "data-origin-src") {
+                                if (photo[0].attribs[name].replace(/\s/g, "") !== "" && photo[0].attribs[name].slice(0, 4) !== "data") {
                                     linkPhoto = photo[0].attribs[name];
-                                    if (linkPhoto.slice(0, 4) !== "data") linkPhoto = "https:" + linkPhoto;
+                                    linkPhoto = "https:" + linkPhoto;
                                 }
                             }
                         }
                     )
-                    /*
-                    ((name: string) => {
-                        if (name.includes("data") || name.includes("src")) {
-                            console.log(name);
-                        }
-                    })
-                    */
-                    console.log(`item: ${titleFinal} cost: ${arrayCost} link: ${link} photo: ${linkPhoto} file: ${file}`);
 
                     let response = {
                         itemName: titleFinal,
                         cost: Number.parseInt(arrayCost![0]),
-                        idItem: idAlbum![1],
+                        idItem: idAlbum,
                         image: linkPhoto,
                         storeName: directory,
                         link: link.replace(/\s/g, ""),
+                        popularity: 0,
                     }
-                    console.log(response);
+
                     responseArray.push(response);
                 });
 
@@ -261,10 +288,12 @@ export default class ScraperController {
         return Promise.resolve(responseArray);
     }
 
-
-    static async converterFilesToItems(): Promise<{
-        message: String
-    } | { error: String }> {
+    /**
+     * 
+     * @returns Promise with a message or an error
+     * @description function that convert all the files in the cache/stores directory to json files
+     */
+    static async converterFilesToItems(): Promise<{}> {
         let arrayDir = fs.readdirSync(`./cache/stores`);
         let arrayData = [{}];
 
@@ -273,24 +302,23 @@ export default class ScraperController {
         await Promise.all(arrayDir.map(async (directory: string) => {
             return await this.getResponseFromItem(directory).then((response) => {
                 fs.writeFileSync(`./cache/${directory}.json`, JSON.stringify(response));
+                arrayData.push(response);
             }).catch((e) => {
-                return Promise.reject({
-                    error: `${e}`,
-                })
+                return Promise.reject(e)
             })
         })).catch((e) => {
             console.log(e);
-            return Promise.reject({
-                error: `${e}`,
-            });
+            return Promise.reject(e);
         })
 
-        return Promise.resolve({
-            message: "Converter completed",
-        });
+        return Promise.resolve(arrayData);
     }
 
-
+    /**
+     * 
+     * @returns Promise with a message or an error
+     * @description function that insert all the items in the database
+     */
     static async callerInsertItems(): Promise<{}> {
         let arrayDir = fs.readdirSync(`./cache/`);
         let array: [{}] = [{}];
@@ -299,7 +327,7 @@ export default class ScraperController {
             if (file.includes(".json")) {
                 let fileRed = fs.readFileSync(`./cache/${file}`);
                 array = JSON.parse(fileRed.toString());
-                return await this.apiInsertItems(array).then((res: {}) => {
+                return await this.insertItems(array).then((res: {}) => {
                     response = res;
                 }).catch((e: any) => {
                     return Promise.reject(e);
@@ -307,14 +335,17 @@ export default class ScraperController {
 
             }
         })).catch((e: any) => {
-            return Promise.reject(
-                e
-            );
+            return Promise.reject(e);
         })
         return Promise.resolve(response);
     }
-
-    static async updateItems(filename: string): Promise<{ itemInseriti: string[], itemNonInseriti: string[] } | { error: string }> {
+    /**
+     * 
+     * @param filename string of the file to update
+     * @returns Promise with a object or an error
+     * @description function that update the items in the database with the items in the file passed
+     */
+    static async updateItems(filename: string): Promise<{ itemInseriti: string[], itemNonInseriti: string[] } | {}> {
         let array: [] = [];
         let file = fs.readFileSync(`./cache/${filename}.json`);
         array = JSON.parse(file.toString());
@@ -322,35 +353,55 @@ export default class ScraperController {
         let itemsNonInseriti: string[] = [];
         await Promise.all(
             array.map(async (item: any) => {
-                await this.apiGetItemById(item.idItem).then(async (res) => {
-                    if (res.item == undefined && res.error == "") {
-                        await this.apiInsertItem(item).then(() => {
+                await this.getItemById(item.idItem).then(async (res) => {
+                    if (res._id == "") {
+                        await this.insertItem(item).then(() => {
                             itemsInseriti.push(item.idItem);
                         }).catch((e: any) => {
-                            return Promise.reject({
-                                error: `${e}`,
-                            })
+                            return Promise.reject(e)
                         })
                     } else {
                         itemsNonInseriti.push(item.idItem);
                     }
                 }).catch((e: any) => {
-                    return Promise.reject({
-                        error: `${e}`,
-                    })
+                    return Promise.reject(e);
                 })
             })
         ).catch((e: any) => {
-            Promise.reject({
-                error: `${e}`,
-            })
+            Promise.reject(e);
         })
         return Promise.resolve({
             itemInseriti: itemsInseriti,
             itemNonInseriti: itemsNonInseriti,
         })
     }
-    static async apiGetImage(responseGetItems: any, itemsPerPage: number, page: number, filters: {}, total_items: number, res: any) {
+
+
+    /**
+     * 
+     * @param items array of items to insert
+     * @returns Promise
+     * @description function that act as middleware that get the images of the items
+     */
+    static async getImage(itemsList: [{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
+        link: string
+    }]): Promise<[{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
+        link: string
+    }]> {
 
         const HttpsAgent = require("agentkeepalive").HttpsAgent;
         const keepAliveAgent = new Agent({
@@ -368,82 +419,47 @@ export default class ScraperController {
             freeSocketTimeout: 30000, // free socket keepalive for 30 seconds
         });
 
-
+        let buffer: string = "";
         let instance = axios.create({
             httpAgent: keepAliveAgent,
             httpsAgent: httpsKeepAliveAgent,
 
         })
-        let indexLast: number = 0;
-
-        try {
-            responseGetItems.map((item: any, index: any) => {
-
-                if (item.images.slice(0, 4) == "data") {
-                    item.imageBuffer = item.images;
-                    item.images = "";
-                    responseGetItems[index] = item;
-                    indexLast++;
-
-                    if (indexLast == itemsPerPage) {
-                        res.json({
-                            code: 200,
-                            items: responseGetItems,
-                            page: page,
-                            filters: filters,
-                            entries_per_page: itemsPerPage,
-                            total_items: total_items,
-                        })
+        await Promise.all(itemsList.map(async (item: any) => {
+            if (item.image.slice(0, 4) !== "data") {
+                return await instance.get(item.image, {
+                    responseType: 'arraybuffer',
+                    headers: {
+                        "Referer": item.link
                     }
-                } else {
-                    instance.get(item.images, {
-                        responseType: 'arraybuffer',
-                        headers: {
-                            "Referer": item.link
-                        }
-                    }).then((response: any) => {
-                        let buffered = Buffer.from(response.data, 'binary').toString("base64");
-                        item.imageBuffer = buffered;
-                        item.images = "";
-                        responseGetItems[index] = item;
-
-                        indexLast++;
-
-                        if (indexLast == itemsPerPage) {
-                            res.json({
-                                code: 200,
-                                items: responseGetItems,
-                                page: page,
-                                filters: filters,
-                                entries_per_page: itemsPerPage,
-
-                            })
-                        }
-                    })
-                }
-
-
-            })
-        } catch (e) {
-            res.json({
-                error: e,
-                status: "failed"
-            })
-
-        }
-
+                }).then((response: any) => {
+                    buffer = Buffer.from(response.data, 'binary').toString("base64");
+                    item.image = buffer;
+                }).catch((e: any) => {
+                    item.image = "No Image";
+                })
+            }
+        })).catch((e: any) => {
+            return Promise.reject(e);
+        })
+        return Promise.resolve(itemsList);
     }
 
 
-
-    static async apiInsertItem(item: {
+    /**
+     * 
+     * @param item item to insert
+     * @returns promise object
+     * @description function that insert an item in the database
+     */
+    static async insertItem(item: {
         itemName: string,
         idItem: string,
         cost: number,
         image: string,
         storeName: string,
         link: string,
-    }): Promise<{} | { error: string }> {
+    }): Promise<{}> {
         let insertItemResponse: any;
         try {
             insertItemResponse = await ScraperDao.insertItem({
@@ -456,17 +472,20 @@ export default class ScraperController {
                 popularity: 0,
             });
         } catch (e: any) {
-            return Promise.reject({
-                error: e
-            })
+            return Promise.reject(e)
         }
 
         return Promise.resolve(
             insertItemResponse
         );
     }
-
-    static async apiInsertItems(objectRetrived: [{}]): Promise<{}> {
+    /**
+     * 
+     * @param objectRetrived array of items to insert
+     * @returns Promise object
+     * @description function that insert an array of items in the database
+     */
+    static async insertItems(objectRetrived: [{}]): Promise<{}> {
         let insertItemResponse: {};
         insertItemResponse = await ScraperDao.insertItems(objectRetrived).catch((e: any) => {
             return Promise.reject(e)
@@ -476,25 +495,28 @@ export default class ScraperController {
 
 
     }
+    /**
+     * 
+     * @param itemName name of the item to get
+     * @returns Promise object
+     * @description function that get an item by id
+     */
+    static async getItemById(itemId: string): Promise<{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
 
-    static async apiGetItemById(itemName: string): Promise<{
-        item: {
-            _id: string,
-            itemName: string,
-            cost: number,
-            idItem: string,
-            images: string,
-            storeName: string,
-            popularity: number
-        },
-        error: string
     }> {
         let objectId: {
             _id: string,
             itemName: string,
             cost: number,
             idItem: string,
-            images: string,
+            image: string,
             storeName: string,
             popularity: number
         } = {
@@ -502,90 +524,112 @@ export default class ScraperController {
             itemName: "",
             cost: -1,
             idItem: "",
-            images: "",
+            image: "",
             storeName: "",
             popularity: 0
         };
-        try {
-            objectId = await ScraperDao.getItemByID(itemName);
-        } catch (e) {
-            return Promise.reject({
-                item: objectId,
-                error: `Problem in inserting order ${e}`
-            })
-        }
-        return Promise.resolve({
-            item: objectId,
-            error: ""
-        });
-    }
 
-    static async apiPopularity(res: any, itemName: string) {
+        objectId = await ScraperDao.getItemByID(itemId).catch((e: any) => {
+            return Promise.reject(e)
+        })
+
+        return Promise.resolve(objectId);
+    }
+    /**
+     * 
+     * @param itemId id of the item to increment
+     * @returns Promise Object
+     * @description function that increment the popularity of an item
+     */
+    static async incrementPopularity(itemId: string): Promise<{}> {
         let response: any;
-        try {
-            response = await ScraperDao.incrementOne(itemName);
 
-        } catch (e) {
-            res.json({
-                error: e,
-                status: "failed"
-            })
-            console.error(`Problem in inserting popularity ${e}`);
+        response = await ScraperDao.incrementOne(itemId).catch((e: any) => {
+            return Promise.reject(e);
+        })
+        return Promise.resolve(response);
+
+    }
+
+    /**
+     * 
+     * @param req request
+     * @returns Promise of the response
+     * @description get the items from the db
+     */
+    static async getItem(reqQuery: any): Promise<{}> {
+        let responseItems: {
+            itemsList: [{
+                _id: string,
+                itemName: string,
+                cost: number,
+                idItem: string,
+                image: string,
+                storeName: string,
+                popularity: number
+                link: string
+            }],
+            totalItemsList: number;
+        } = {
+            itemsList: [{
+                _id: "",
+                itemName: "",
+                cost: -1,
+                idItem: "",
+                image: "",
+                storeName: "",
+                popularity: 0,
+                link: ""
+            }],
+            totalItemsList: 0
         }
-        res.json(response)
-    }
-
-    static async apiGetPopularity(req: any, res: any) {
-        let responseGetItems = await ScraperDao.getItemByPopularity();
-        console.log(this)
-        return await this.apiGetImage(responseGetItems, 5, 0, {}, 5, res);
-    }
-    static async apiGetItem(req: any, res: any) {
-
-        const itemsPerPage = req.query.itemsPerPage
-            ? parseInt(req.query.itemsPerPage, 10)
+        const itemsPerPage = reqQuery.itemsPerPage
+            ? parseInt(reqQuery.itemsPerPage, 10)
             : 20;
-        const page = req.query.page ? parseInt(req.query.page, 10) : 0;
+        const page = reqQuery.page ? parseInt(reqQuery.page, 10) : 0;
 
         let filters: any = {};
-
-        if (req.query.cost) {
-            filters.cost = req.query.cost;
-            filters.cost[0] = Number(filters.cost[0])
+        let sortBy: {} = {};
+        if (reqQuery.cost) {
+            filters.cost = Number(reqQuery.cost)
         }
 
-        if (req.query.itemName) {
-            filters.itemName = req.query.itemName;
+        if (reqQuery.itemName) {
+            filters.itemName = reqQuery.itemName;
         }
-        if (req.query.storeName) {
-            filters.storeName = req.query.storeName;
+        if (reqQuery.storeName) {
+            filters.storeName = reqQuery.storeName;
         }
-        if (req.query.$text) {
-            filters.$text = req.query.$text;
+        if (reqQuery.$text) {
+            filters.$text = reqQuery.$text;
         }
 
+        if (reqQuery.sortBy) {
+            sortBy = reqQuery.sortBy;
+        }
 
-        console.error(`request body: ${JSON.stringify(req.body)} `);
-        console.error(filters);
-        let responseGetItems = await ScraperDao.getItems({
+        responseItems = await ScraperDao.getItems({
             filters,
             page,
             itemsPerPage,
+            sortBy
+        }).catch((e: any) => {
+            return Promise.reject(e)
         })
-        if (responseGetItems.itemsList.length == 0) {
-            res.json({
-                code: 200,
-                items: []
-            })
-        }
-        return await this.apiGetImage(responseGetItems.itemsList, itemsPerPage, page, filters, responseGetItems.totalItemsList, res)
-    }
 
-    static async deleteAll() {
+
+        responseItems.itemsList = await this.getImage(responseItems.itemsList).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(responseItems);
+    }
+    /**
+     * @description function that delete all the items in the database
+     * @returns Promise object
+     */
+    static async deleteAll(): Promise<{}> {
         await ScraperDao.deleteAllItems().catch((e: any) => {
-            return Promise.reject({
-                error: e
-            })
+            return Promise.reject(e)
         })
         return Promise.resolve({
             message: "deleted"
