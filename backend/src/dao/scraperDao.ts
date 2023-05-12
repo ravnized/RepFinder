@@ -260,15 +260,5 @@ export default class ScraperDao {
         */
     }
 
-    static async getItemByPopularity() {
-        try {
-            return await items.find().sort({ "popularity": -1 }).limit(5).toArray()
-        } catch (e) {
-            console.log(`errore: ${e}`);
-            return [];
-        }
-
-    }
-
 
 }
