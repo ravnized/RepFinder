@@ -52,10 +52,13 @@ router.route("/searchByID").get((req: any, res: any, next: any) => {
         error: "No id"
     })
 })
-router.route("/incrementOne").get((req: any, res: any, next: any) => {
-    console.log(req.query.id)
-    return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.incrementPopularity(req.query.id) : res.json({
-        error: "No id"
+router.route("/incrementOne").post((req: any, res: any, next: any) => {
+    ScraperController.incrementPopularity(req.query.id).then(() => {
+        return res.status(200).json({
+            message: "Incremented"
+        });
+    }).catch((e: any) => {
+        return res.status(500).json(e);
     })
 })
 

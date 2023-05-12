@@ -166,13 +166,13 @@ export default class ScraperDao {
             })
         };
 
-
-        itemsList = await displayCursor.toArray().catch((e: any) => {
+        try {
+            itemsList = await displayCursor.toArray();
+        } catch (e: any) {
             return Promise.reject({
-                error: `Error in converting cursor to array: ${e}`
+                error: `Error in finding items: ${e}`
             })
-        })
-
+        };
         return Promise.resolve(itemsList);
 
     }
@@ -240,9 +240,28 @@ export default class ScraperDao {
     }
 
 
-    static async incrementOne(itemName: string) {
-        let items = await this.getItemByID(itemName);
-        console.log(`items: ${JSON.stringify(items)}`);
+    static async incrementOne(itemId: string): Promise<{}> {
+        await this.getItemByID(itemId).catch((e: any) => {
+            return Promise.reject({
+                error: `Unable to get item, ${e}`,
+            });
+        }).then(async (res: any) => {
+            try {
+                await items.updateOne(
+                    { "idItem": itemId },
+                    { $set: { "popularity": res[0].popularity + 1 } }
+                )
+            } catch (e) {
+                return Promise.reject({
+                    error: `Unable to update item, ${e}`,
+                });
+            }
+        })
+
+
+        return Promise.resolve({
+            "message": "success",
+        });
         /*
         if (items.popularity === undefined) {
             await items.updateOne(
