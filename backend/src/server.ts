@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import ScraperDao from "./dao/scraperDao";
 import scraperRoutes from "./api/scraper-routes";
+import usersRoutes from "./api/users-routes";
 import UsersDao from "./dao/usersDao";
 const app = express();
 declare var process: {
@@ -38,6 +39,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.use("/api/v1/items", scraperRoutes);
+app.use("/api/v1/users", usersRoutes);
 app.use("*", (req, res) => {
 	res.status(404).json({ error: "not found" });
 });

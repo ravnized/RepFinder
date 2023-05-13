@@ -7,7 +7,6 @@ const Agent = require("agentkeepalive");
 import UserAgent from 'user-agents';
 export default class ScraperController {
 
-
     /**
      * @param arrayInfo array of objects with url and filename passed from the client
      * @returns a promise with a message
