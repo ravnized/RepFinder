@@ -1,8 +1,16 @@
 import * as jose from 'jose';
 import * as dotenv from "dotenv";
+import sha256 from 'crypto-js/sha256';
+import hmacSHA512 from 'crypto-js/hmac-sha512';
+import Base64 from 'crypto-js/enc-base64';
+import { response } from 'express';
 declare var process: {
     env: {
         SECRET: string;
+        SECRET_PASS: string;
+        SECRET_EMAIL: string;
+        SECRET_NAME: string;
+        SECRET_LASTNAME: string;
     };
 };
 dotenv.config({ path: __dirname + "../../.env" });
@@ -23,6 +31,9 @@ export default class UsersDao {
         if (users) return;
         try {
             users = await conn.db("Main").collection("Users");
+            await conn.db("Main").collection("Users").createIndex({
+                email: 1
+            }, { unique: true });
         } catch (e) {
             return Promise.reject(e)
         }
@@ -35,7 +46,15 @@ export default class UsersDao {
         let query = {
             email: "",
         }
-        query.email = email
+        let emailEncrypted: string = "";
+        await this.encryptData(email, process.env.SECRET_EMAIL).then((res: string) => {
+            emailEncrypted = res;
+        }).catch((e: any) => {
+            return Promise.reject({
+                error: `Error in encrypting email: ${e}`
+            })
+        })
+        query.email = emailEncrypted;
         let cursor: any;
         let usersList: [usersObejct] = [{
             email: "",
@@ -85,4 +104,83 @@ export default class UsersDao {
             })
         return Promise.resolve(jwt);
     }
+    static async encryptData(data: string, secret: string = process.env.SECRET_PASS): Promise<string> {
+        let token: string = "";
+        try {
+            let hash = sha256(data + secret);
+            let hmac = hmacSHA512(hash, secret);
+            token = Base64.stringify(hmac);
+        } catch (e) {
+            return Promise.reject(e)
+        }
+
+        return Promise.resolve(token);
+    }
+
+
+
+    static async createUser(user: usersObejct): Promise<{}> {
+        let password: string = "";
+        let email: string = "";
+        let name: string = "";
+        let lastName: string = "";
+        await this.encryptData(user.password, process.env.SECRET_PASS).then((response) => {
+            password = response;
+        }).catch((error) => {
+            return Promise.reject(error);
+        });
+
+        await this.encryptData(user.email, process.env.SECRET_EMAIL).then((response: string) => {
+            email = response;
+        }).catch((error: any) => {
+            return Promise.reject(error)
+        })
+        await this.encryptData(user.name, process.env.SECRET_NAME).then((response: string) => {
+            name = response;
+        }).catch((error: any) => {
+            return Promise.reject(error)
+        })
+
+        await this.encryptData(user.lastName, process.env.SECRET_LASTNAME).then((response: string) => {
+            lastName = response;
+        }).catch((error: any) => {
+            return Promise.reject(error)
+        })
+
+
+
+        user.email = email;
+        user.password = password;
+        user.name = name;
+        user.lastName = lastName;
+        try {
+            await users.insertOne(user)
+        } catch (e: any) {
+            return Promise.reject(e)
+        }
+
+
+        return Promise.resolve({
+            message: "User created"
+        });
+    }
+
+    static async verifyToken(token: string): Promise<string> {
+        
+
+        await jose.jwtVerify(token, this.secret).then((response: jose.JWTVerifyResult) => {
+
+            if (response.payload.iat !== undefined && response.payload.exp !== undefined) {
+                if (response.payload.iat >= response.payload.exp) {
+                    return Promise.reject("Token Expired");
+                }
+            }
+        }).catch((error: any) => {
+            return Promise.reject(error)
+        })
+
+        return Promise.resolve("good");
+
+    }
+
 }
