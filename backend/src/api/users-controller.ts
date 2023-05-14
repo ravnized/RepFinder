@@ -1,4 +1,6 @@
+import { response } from "express";
 import UsersDao from "../dao/usersDao";
+import * as jose from 'jose';
 interface usersObejct {
     email: string,
     password: string,
@@ -78,16 +80,62 @@ export default class UsersController {
         });
     }
     static async verifyToken(req: any): Promise<{}> {
-        let responseString: string = "";
+        let responseString: boolean = false;
         await UsersDao.verifyToken(req.body.token).then((response) => {
-            responseString = response;
+            responseString = response.success;
         }
-        ).catch((error) => {
-            return Promise.reject(error);
+        ).catch((e) => {
+            return Promise.reject({
+                response: e.error
+            });
         }
         );
         return Promise.resolve({
             response: responseString
         });
+    }
+
+    static async getRole(req: any): Promise<{}> {
+        await UsersDao.verifyToken(req.body.token).then(async (response: {
+            success: boolean,
+            error: string,
+            data: jose.JWTPayload
+        }) => {
+            if (response.success) {
+                let user: any = response.data.user;
+
+                if (user.role === 0) {
+                    return Promise.reject({
+                        success: false,
+                        error: "User not authorized"
+                    })
+                } else {
+
+                    await UsersDao.getRole(user.email).then((response: {
+                        success: boolean,
+                        error: string,
+                        role: number
+                    }) => {
+                        console.log(response);
+                        if (response.role !== 1) {
+                            return Promise.reject({
+                                success: false,
+                                error: "User not authorized"
+                            })
+                        }
+
+                    }).catch((e: any) => {
+                        return Promise.reject(e)
+                    });
+
+                }
+            }
+        }).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve({
+            success: true,
+            error: ""
+        })
     }
 }

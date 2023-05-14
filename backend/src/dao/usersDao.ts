@@ -20,6 +20,7 @@ interface usersObejct {
     password: string,
     name: string,
     lastName: string,
+    role: number,
 }
 export default class UsersDao {
 
@@ -61,6 +62,7 @@ export default class UsersDao {
             password: "",
             name: "",
             lastName: "",
+            role: 0,
         }];
         try {
             cursor = await users.find(query)
@@ -165,22 +167,99 @@ export default class UsersDao {
         });
     }
 
-    static async verifyToken(token: string): Promise<string> {
-        
+    static async verifyToken(token: string): Promise<{ success: boolean, error: string, data: jose.JWTPayload }> {
+
+        let responseReturn: jose.JWTPayload = {
+
+            iss: "",
+            sub: "",
+            aud: "",
+            jti: "",
+            nbf: 0,
+            exp: 0,
+            iat: 0,
+
+        }
 
         await jose.jwtVerify(token, this.secret).then((response: jose.JWTVerifyResult) => {
 
             if (response.payload.iat !== undefined && response.payload.exp !== undefined) {
                 if (response.payload.iat >= response.payload.exp) {
-                    return Promise.reject("Token Expired");
+                    return Promise.reject({
+                        success: false,
+                        error: "Token Expired",
+                        data: responseReturn.payload
+                    });
+                } else {
+                    responseReturn = response.payload;
                 }
             }
         }).catch((error: any) => {
-            return Promise.reject(error)
+            return Promise.reject({
+                success: false,
+                error: `${error}`,
+                data: responseReturn
+            })
         })
 
-        return Promise.resolve("good");
+        return Promise.resolve({
+            success: true,
+            error: "",
+            data: responseReturn
+        });
 
+    }
+
+    static async getRole(email: string): Promise<{ success: boolean, error: string, role: number }> {
+        let role: number = 0;
+        let query = {
+            email: "",
+        }
+        query.email = email;
+        let cursor: any;
+        let usersList: [usersObejct] = [{
+            email: "",
+            password: "",
+            name: "",
+            lastName: "",
+            role: 0,
+        }];
+        try {
+            cursor = await users.find(query)
+        } catch (e: any) {
+            return Promise.reject({
+                success: false,
+                error: `Error in finding items: ${e}`,
+                role: 0
+            })
+        };
+        let displayCursor;
+        try {
+            displayCursor = await cursor
+                .limit(20)
+                .skip(20 * 0);
+        } catch (e: any) {
+            return Promise.reject({
+                success: false,
+                error: `Error in finding items: ${e}`,
+                role: 0
+            })
+        };
+
+        try {
+            usersList = await displayCursor.toArray();
+        } catch (e: any) {
+            return Promise.reject({
+                success: false,
+                error: `Error in finding items: ${e}`,
+                role: 0
+            })
+        };
+        return Promise.resolve({
+            success: true,
+            error: ``,
+            role: usersList[0].role
+        });
     }
 
 }

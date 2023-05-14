@@ -9,6 +9,7 @@ import ScraperDao from "./dao/scraperDao";
 import scraperRoutes from "./api/scraper-routes";
 import usersRoutes from "./api/users-routes";
 import UsersDao from "./dao/usersDao";
+import scraperPriviligedRoutes from "./api/scraper-routes-logged";
 const app = express();
 declare var process: {
 	env: {
@@ -40,6 +41,7 @@ app.use(cookieParser());
 
 app.use("/api/v1/items", scraperRoutes);
 app.use("/api/v1/users", usersRoutes);
+app.use("/api/v1/privileged-routes", scraperPriviligedRoutes);
 app.use("*", (req, res) => {
 	res.status(404).json({ error: "not found" });
 });
