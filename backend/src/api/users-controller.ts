@@ -1,4 +1,3 @@
-import { response } from "express";
 import UsersDao from "../dao/usersDao";
 import * as jose from 'jose';
 interface usersObejct {
@@ -9,6 +8,11 @@ interface usersObejct {
     role: number,
 }
 export default class UsersController {
+    /**
+     * @param req request
+     * @returns Promise with the token or error
+     * @description Function for login
+     */
     static async login(req: any): Promise<string> {
         let email: string = req.body.email;
         let password: string = req.body.password;
@@ -42,6 +46,11 @@ export default class UsersController {
         });
         return Promise.resolve(token);
     }
+    /**
+     * @param req request
+     * @returns Promise object
+     * @description Function for register
+     */
     static async register(req: any): Promise<{}> {
         let email: string = req.body.email;
         let password: string = req.body.password;
@@ -64,7 +73,7 @@ export default class UsersController {
             role: role,
 
         };
-
+        
 
         await UsersDao.createUser(user).then((response) => {
             return Promise.resolve(response);
@@ -79,6 +88,11 @@ export default class UsersController {
             message: "User created successfully"
         });
     }
+    /**
+     * @param req request
+     * @returns Promise object
+     * @description Function for verify token
+     */
     static async verifyToken(req: any): Promise<{}> {
         let responseString: boolean = false;
         await UsersDao.verifyToken(req.body.token).then((response) => {
@@ -94,7 +108,11 @@ export default class UsersController {
             response: responseString
         });
     }
-
+    /**
+     * @param req request
+     * @returns Promise object
+     * @description Function for get role
+     */
     static async getRole(req: any): Promise<{}> {
         await UsersDao.verifyToken(req.body.token).then(async (response: {
             success: boolean,
@@ -116,7 +134,6 @@ export default class UsersController {
                         error: string,
                         role: number
                     }) => {
-                        console.log(response);
                         if (response.role !== 1) {
                             return Promise.reject({
                                 success: false,

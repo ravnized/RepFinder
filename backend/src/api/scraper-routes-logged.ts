@@ -13,7 +13,7 @@ router.use((req: any, res: any, next: any) => {
 })
 
 
-router.route("/converter/").get((req: any, res: any) => {
+router.route("/converter/").post((req: any, res: any) => {
     ScraperController.converterFilesToItems().then((result: any) => {
         res.status(200).json(result)
     }).catch((err: any) => {
@@ -32,7 +32,7 @@ router.route("/scraperMulti/").post((req: any, res: any) => {
             });
         });
 });
-router.route("/callerInsertItems").get((req: any, res: any) => {
+router.route("/callerInsertItems").post((req: any, res: any) => {
     ScraperController.callerInsertItems().then((result: any) => {
         return res.status(200).json(result)
     }).catch((err: any) => {
@@ -46,5 +46,11 @@ router.route("/updateItems").post((req: any, res: any) => {
         return res.status(500).json(err);
     });
 })
-
+router.route("/deleteAll").post((req: any, res: any) => {
+    ScraperController.deleteAll().then((result: any) => {
+        return res.status(200).json(result);
+    }).catch((err: any) => {
+        return res.status(500).json(err);
+    });
+});
 export default router;

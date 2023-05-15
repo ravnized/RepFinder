@@ -24,20 +24,4 @@ router.route("/incrementOne").post((req: any, res: any, next: any) => {
         return res.status(500).json(e);
     })
 })
-
-
-
-
-
-
-
-
-router.route("/deleteAll").get((req: any, res: any) => {
-    ScraperController.deleteAll().then((result: any) => {
-        return res.status(200).json(result);
-    }).catch((err: any) => {
-        return res.status(500).json(err);
-    });
-});
-
 export default router;

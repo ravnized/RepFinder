@@ -12,8 +12,8 @@ export default class ScraperController {
      * @returns a promise with a message
      * @description this is the creator of each scraper, the number of scraper is equal to the number of objects in the array
      */
-    static async scraperMulti(arrayInfo: [{ url: string, filename: string }]): Promise<{}> {
-        await Promise.all(arrayInfo.map(async (data: { url: string, filename: string }) => {
+    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }], token: string }): Promise<{}> {
+        await Promise.all(arrayInfo.scraper.map(async (data: { url: string, filename: string }) => {
             return await this.scraperMain(data.url, data.filename).catch((err: any) => {
                 return Promise.reject(err)
             })
@@ -223,6 +223,7 @@ export default class ScraperController {
             let regexAlbumId = new RegExp('\\/albums\\/(\\d+)\\?uid', '')
             arrayFile.forEach((file: string) => {
                 let fileRead = fs.readFileSync(`./cache/stores/${directory}/${file}`)
+                if (fileRead.toString() === "") return;
                 const $ = cheerio.load(fileRead);
                 let arrayAlbum = arrayAlbumRegex.exec(fileRead);
                 let arrayAlbumSliced = arrayAlbum![0].slice(0, -1)

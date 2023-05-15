@@ -27,6 +27,12 @@ export default class UsersDao {
     static connectionDB: any;
     static secret = new TextEncoder().encode(process.env.SECRET);
     static alg: jose.JWTHeaderParameters = { alg: 'HS256' };
+    /**
+     * 
+     * @param conn connection to the database
+     * @returns Promise with the message or error
+     * @description Function for connecting to the database
+     */
     static async connDB(conn: any) {
         this.connectionDB = conn;
         if (users) return;
@@ -42,7 +48,12 @@ export default class UsersDao {
             message: "Connection to users established"
         });
     }
-
+    /**
+     * 
+     * @param email email of the user
+     * @returns Promise with the user or error
+     * @description Function for getting the user from the database
+     */
     static async getUser(email: string): Promise<usersObejct[]> {
         let query = {
             email: "",
@@ -93,12 +104,17 @@ export default class UsersDao {
     }
 
 
-
+    /**
+     * 
+     * @param user user object
+     * @returns Promise with the token or error
+     * @description Function for creating the token
+     */
     static async createToken(user: usersObejct): Promise<string> {
         const jwt = await new jose.SignJWT({ user })
             .setProtectedHeader(this.alg)
             .setIssuedAt()
-            .setExpirationTime('2h')
+            .setExpirationTime('30d')
             .sign(this.secret).catch((e: any) => {
                 return Promise.reject({
                     error: `Error in creating token: ${e}`
@@ -106,6 +122,13 @@ export default class UsersDao {
             })
         return Promise.resolve(jwt);
     }
+    /**
+     * 
+     * @param data string with the data to encrypt
+     * @param secret string with the secret for encrypt
+     * @returns string with the encrypted data
+     * @description Function for encrypting data
+     */
     static async encryptData(data: string, secret: string = process.env.SECRET_PASS): Promise<string> {
         let token: string = "";
         try {
@@ -120,7 +143,12 @@ export default class UsersDao {
     }
 
 
-
+    /**
+     * 
+     * @param user user object
+     * @returns Promise Object with the message or error
+     * @description Function for creating the user
+     */
     static async createUser(user: usersObejct): Promise<{}> {
         let password: string = "";
         let email: string = "";
@@ -155,10 +183,13 @@ export default class UsersDao {
         user.password = password;
         user.name = name;
         user.lastName = lastName;
+
         try {
             await users.insertOne(user)
         } catch (e: any) {
-            return Promise.reject(e)
+            return Promise.reject({
+                error: `Error in inserting items: ${e}`
+            })
         }
 
 
@@ -166,7 +197,12 @@ export default class UsersDao {
             message: "User created"
         });
     }
-
+    /**
+     * 
+     * @param token string with the token
+     * @returns promise with the success, error and data
+     * @description Function for verifying the token
+     */
     static async verifyToken(token: string): Promise<{ success: boolean, error: string, data: jose.JWTPayload }> {
 
         let responseReturn: jose.JWTPayload = {
@@ -209,7 +245,12 @@ export default class UsersDao {
         });
 
     }
-
+    /**
+     * 
+     * @param email string with the email
+     * @returns promise with the success, error and data
+     * @description Function for getting the role
+     */
     static async getRole(email: string): Promise<{ success: boolean, error: string, role: number }> {
         let role: number = 0;
         let query = {
