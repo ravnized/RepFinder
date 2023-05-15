@@ -4,156 +4,402 @@ import ScraperDao from "../dao/scraperDao";
 import puppeteer from 'puppeteer';
 import axios from "axios";
 const Agent = require("agentkeepalive");
+import UserAgent from 'user-agents';
 export default class ScraperController {
 
-    static currentPage = 1;
-    static urlMod = "";
-
-    static async scraperMain(url: string, filename: string, res: any) {
-        let finalFile = "";
-
-        try {
-
-            const browser = await puppeteer.launch();
-            try {
-                this.spawnerPage(url, filename, browser, finalFile, res)
-            } catch (e) {
-                console.log(`error ${e}`)
-            }
-        } catch (e) {
-            res.JSON({
-                error: e,
-                status: "failed"
+    /**
+     * @param arrayInfo array of objects with url and filename passed from the client
+     * @returns a promise with a message
+     * @description this is the creator of each scraper, the number of scraper is equal to the number of objects in the array
+     */
+    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }], token: string }): Promise<{}> {
+        await Promise.all(arrayInfo.scraper.map(async (data: { url: string, filename: string }) => {
+            return await this.scraperMain(data.url, data.filename).catch((err: any) => {
+                return Promise.reject(err)
             })
-            console.log(`error: ${e}`);
-        }
-
+        })).catch((err: any) => {
+            return Promise.reject(err)
+        })
+        return Promise.resolve({ message: "Scraping completed" })
     }
 
-    static async spawnerPage(url: string, filename: string, browser: any, finalFile: any, res: any) {
 
+    /**
+     * 
+     * @param url string of the url to scrape es: https://chaosmade.x.yupoo.com/albums
+     * @param filename string of the filename to create es: chaosmade
+     * @returns Promise with a message
+     * @description function that manage all the pages of the url passed
+     */
+    static async scraperMain(url: string, filename: string): Promise<{}> {
+        let pageMax: number;
+        pageMax = 0;
+        let count = 0;
+        let browser = await puppeteer.launch({
+            headless: true
+        });
+
+        pageMax = await this.getPageMax(url, browser);
+        //generate an array with all the urls to scrape
+        let urls: string[] = [];
+        //https://chaosmade.x.yupoo.com/albums
+        for (let i = 1; i <= pageMax; i++) {
+            urls.push(`${url}?page=${i}`);
+        }
+        let promises = [];
+
+
+        do {
+            promises = urls.splice(0, 20);
+
+            console.log(promises);
+            // 20 at a time
+            await Promise.all(promises.map(async (url: string, index: number) => {
+                await this.convertPage(url, browser)
+                    .then(async (data: any) => {
+                        console.log(`creating file ${filename} ${index + 1 + (count * 20)}`)
+                        await this.createFile(filename, index + 1 + (count * 20), data.message)
+                    })
+                    .catch((err: any) => {
+                        return Promise.reject(err);
+                    })
+            }))
+            count++;
+
+        } while (urls.length)
+        await browser.close();
+        return Promise.resolve({
+            message: `Finito ${filename}`
+        })
+
+
+
+
+
+
+    }
+    /**
+     * 
+     * @param dirName string of the directory name
+     * @param filename number of the filename
+     * @param content string of the content to write in the file
+     * @returns promise with a message
+     * @description function that create a file in the cache folder check if the cache folder exists and stores exists
+     */
+    static async createFile(dirName: string, filename: number, content: string): Promise<{}> {
+        try {
+            if (!fs.existsSync(`./cache`)) {
+                fs.mkdirSync(`./cache`);
+            }
+            if (!fs.existsSync(`./cache/stores`)) {
+                fs.mkdirSync(`./cache/stores`);
+            }
+
+            if (!fs.existsSync(`./cache/stores/${dirName}`)) {
+                fs.mkdirSync(`./cache/stores/${dirName}`);
+            }
+            fs.writeFileSync(`./cache/stores/${dirName}/${filename}`, `${content}`);
+
+        } catch (e) {
+            return Promise.reject(e)
+        }
+        return Promise.resolve({
+            message: "File created"
+        })
+    }
+    /**
+     * 
+     * @param url string of the url to scrape
+     * @param browser puppeteer browser
+     * @returns Promise with a message
+     * @description function that scrape the page and return the html of the page
+     */
+    static async convertPage(url: string, browser: any): Promise<{}> {
+
+        const userAgent = new UserAgent({ deviceCategory: 'mobile' });
         let page;
         let htmlPage;
+        let finalFile = "";
+        let $ = cheerio.load("");
         try {
+            console.log(`visiting: ${url} with user agent: ${userAgent.toString()}`);
             page = await browser.newPage();
+            await page.setUserAgent(userAgent.toString());
+            await page.setDefaultNavigationTimeout(0);
+            await page.goto(url, {
+                'timeout': 0,
+            });
+            htmlPage = await page.content();
+            await page.close();
+            $ = cheerio.load(htmlPage);
+            if (htmlPage.includes("404 Not Found")) {
+                return Promise.reject({
+                    message: `404 Not Found`,
+                })
+            }
+            if (htmlPage == "") {
+                return Promise.reject({
+                    message: `Empty page`,
+                })
+            }
+            $('.showindex__children').each((index: number, item: any) => {
+                finalFile += $(item).html();
+            })
+
+        } catch (e) {
+            console.log(e);
+            return Promise.reject(e)
+        }
+        console.log(`visited: ${url}`);
+        return Promise.resolve({
+            message: finalFile,
+        })
+
+    }
+    /**
+     * 
+     * @param url string of the url to scrape
+     * @param browser puppeteer browser
+     * @returns promise with the number of pages
+     * @description function that return the number of pages of the url passed
+     */
+    static async getPageMax(url: string, browser: any): Promise<number> {
+        const userAgent = new UserAgent({ deviceCategory: 'mobile' });
+        let page;
+        let htmlPage;
+        let pageMax: number;
+        try {
+
+            page = await browser.newPage();
+            await page.setUserAgent(userAgent.toString());
             await page.goto(url);
             htmlPage = await page.content();
             await page.close();
             let $ = cheerio.load(htmlPage);
-            let pagination__active_next = $('.pagination__active').next();
-            let pageMax = $('input[name=page]').attr('max');
+            pageMax = $('input[name=page]').attr('max');
 
-            console.log(pagination__active_next.text())
-            if (ScraperController.currentPage <= pageMax) {
-                $('.showindex__children').each((index: number, item: any) => {
-
-                    finalFile += $(item).html();
-                })
-
-                console.log(url)
-                if (ScraperController.currentPage <= 9) {
-                    ScraperController.urlMod = url.slice(0, url.length - 1)
-                } else {
-                    ScraperController.urlMod = url.slice(0, url.length - 2)
-                }
-                ScraperController.currentPage++;
-                console.log(ScraperController.urlMod + ScraperController.currentPage)
-                this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
-            } else {
-                fs.writeFile(`./cache/${filename}.txt`, `${finalFile}`, (error: any) => {
-                    console.log(error)
-                });
-                await browser.close();
-                ScraperController.currentPage = 1;
-                ScraperController.urlMod = "";
-                return res.json({
-                    filename: filename,
-                    success: "true",
-                })
-            }
         } catch (e) {
-            try {
-                this.spawnerPage(ScraperController.urlMod + ScraperController.currentPage, filename, browser, finalFile, res);
-            } catch (e) {
-                res.json({
-                    error: e,
-                    status: "failed"
-                })
-            }
-            console.log(`Error ${e}`)
+            return Promise.reject(0);
+
         }
+        return Promise.resolve(pageMax);
+    }
+    /**
+     * Core function of the scraper
+     * @param directory string of the directory name
+     * @returns Promise with an array of items or an error
+     * @description function that return an array of items from the directory passed
+     */
+    static async getResponseFromItem(directory: string): Promise<{
+        itemName: string,
+        cost: number,
+        image: string,
+        storeName: string,
+        link: string,
+    }[] | { error: string }> {
+        let responseArray: [{
+            itemName: string,
+            idItem: string,
+            cost: number,
+            image: string,
+            storeName: string,
+            link: string,
+            popularity: number,
+        }] = [{
+            itemName: "",
+            idItem: "",
+            cost: 0,
+            image: "",
+            storeName: "",
+            link: "",
+            popularity: 0,
+        }]
 
+        try {
+            let arrayAlbumRegex = new RegExp(`album.{1,}main"`);
+            let arrayFile = fs.readdirSync(`./cache/stores/${directory}`);
+            let regexPrice = new RegExp("\\d{1,}");
+            let regexPhoto = new RegExp(`album.{1,}wrap`);
+            let regexAlbumId = new RegExp('\\/albums\\/(\\d+)\\?uid', '')
+            arrayFile.forEach((file: string) => {
+                let fileRead = fs.readFileSync(`./cache/stores/${directory}/${file}`)
+                if (fileRead.toString() === "") return;
+                const $ = cheerio.load(fileRead);
+                let arrayAlbum = arrayAlbumRegex.exec(fileRead);
+                let arrayAlbumSliced = arrayAlbum![0].slice(0, -1)
 
+                $(`.${arrayAlbumSliced}`).each((index: number, item: any) => {
+                    let title = $(item).attr("title");
+                    if (title == "more") return;
+                    let link = $(item).attr("href");
+                    let idAlbum = $(item).attr("data-album-id");
+
+                    if (idAlbum == undefined) {
+                        idAlbum = regexAlbumId.exec(link);
+                        idAlbum = idAlbum![1];
+                    } else {
+                        idAlbum = idAlbum.replace(`-`, ``);
+                    }
+
+                    link = `https://${directory}.x.yupoo.com${link}`;
+                    let arrayCost: RegExpExecArray | string[] | null = regexPrice.exec(title);
+                    arrayCost == null ? arrayCost = ["999"] : arrayCost[0] = arrayCost[0];
+                    let titleFinal = title
+                    let arrayAlbumPhoto = regexPhoto.exec(fileRead);
+                    let photo = $(item).find(`.${arrayAlbumPhoto![0]} img`);
+
+                    let linkPhoto = "";
+
+                    Object.keys(photo[0].attribs).map(
+                        (name: string) => {
+                            if (name == "data" || name == "src" || name == "data-src" || name == "data-origin-src") {
+                                if (photo[0].attribs[name].replace(/\s/g, "") !== "" && photo[0].attribs[name].slice(0, 4) !== "data") {
+                                    linkPhoto = photo[0].attribs[name];
+                                    linkPhoto = "https:" + linkPhoto;
+                                }
+                            }
+                        }
+                    )
+
+                    let response = {
+                        itemName: titleFinal,
+                        cost: Number.parseInt(arrayCost![0]),
+                        idItem: idAlbum,
+                        image: linkPhoto,
+                        storeName: directory,
+                        link: link.replace(/\s/g, ""),
+                        popularity: 0,
+                    }
+
+                    responseArray.push(response);
+                });
+
+            });
+
+        } catch (e) {
+            console.log(e);
+            return Promise.reject({
+                error: `${e}`,
+            })
+        }
+        responseArray.shift();
+        return Promise.resolve(responseArray);
     }
 
-    static async converFileToItems(filename: string, url: string, req: any, res: any, next: any) {
-
-        let responseTotalDebug = "";
-        let responseTotal: any[] = [];
-        let indexAddedItems = 0;
-        const $ = cheerio.load(fs.readFileSync(`./cache/${filename}.txt`));
-        var regexAlbum = new RegExp(`album.{1,}main`)
-        let arrayAlbum = regexAlbum.exec(fs.readFileSync(`./cache/${filename}.txt`));
-
-        $(`.${arrayAlbum![0]}`).each(async (index: number, item: any) => {
-            let finished = false;
-            let title = $(item).attr("title");
-
-            let link = $(item).attr("href");
-            link = url + link;
-
-            var regex = new RegExp("\\d{1,}");
-            let array = regex.exec(title)
-            if (array == null) {
-                return;
-            }
-
-            let prezzoRegex = new RegExp("[^￥🔥](?<!\\d)(?<!\\s)\\D+", 'gi');
-            let titleFinal = prezzoRegex.exec(title)
-            if (titleFinal == null) {
-                return;
-            }
-            let arrayPhoto: any[] = [];
-            let regexPhoto = new RegExp(`album.{1,}wrap`)
-            let arrayAlbumPhoto = regexPhoto.exec(fs.readFileSync(`./cache/${filename}.txt`))
-            let linkPhoto = "";
-            let image;
+    /**
+     * 
+     * @returns Promise with a message or an error
+     * @description function that convert all the files in the cache/stores directory to json files
+     */
+    static async converterFilesToItems(): Promise<{}> {
+        let arrayDir = fs.readdirSync(`./cache/stores`);
+        let arrayData = [{}];
 
 
-            let photo = $(item).find(`.${arrayAlbumPhoto![0]} img`);
-            linkPhoto = photo.attr("data-origin-src");
-            if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
-                linkPhoto = photo.attr("src");
 
-                if (linkPhoto == undefined || linkPhoto == "" || linkPhoto.slice(0, 4) == "data") {
-                    linkPhoto = photo.attr("data-src");
-
-                }
-            }
-            if (linkPhoto.slice(0, 4) !== "data") {
-                linkPhoto = "https:" + linkPhoto;
-
-                console.log(linkPhoto)
-            }
-
-            let response = {
-                itemName: titleFinal![0],
-                cost: Number(array![0]),
-                images: linkPhoto,
-                storeName: filename,
-                link: link
-            }
-            responseTotal[indexAddedItems] = response;
-            indexAddedItems++;
-            responseTotalDebug += `Inserting ${response.itemName}, cost: ${response.cost}, images: ${response.images} storeName: ${filename} \n`;
+        await Promise.all(arrayDir.map(async (directory: string) => {
+            return await this.getResponseFromItem(directory).then((response) => {
+                fs.writeFileSync(`./cache/${directory}.json`, JSON.stringify(response));
+                arrayData.push(response);
+            }).catch((e) => {
+                return Promise.reject(e)
+            })
+        })).catch((e) => {
+            console.log(e);
+            return Promise.reject(e);
         })
-        fs.writeFileSync(`log-${filename}.txt`, responseTotalDebug)
 
-        this.apiInsertItems(req, res, next, responseTotal)
-
+        return Promise.resolve(arrayData);
     }
 
-    static async apiGetImage(responseGetItems: any, itemsPerPage: number, page: number, filters: {}, total_items: number, res: any) {
+    /**
+     * 
+     * @returns Promise with a message or an error
+     * @description function that insert all the items in the database
+     */
+    static async callerInsertItems(): Promise<{}> {
+        let arrayDir = fs.readdirSync(`./cache/`);
+        let array: [{}] = [{}];
+        let response: any;
+        await Promise.all(arrayDir.map(async (file: string) => {
+            if (file.includes(".json")) {
+                let fileRed = fs.readFileSync(`./cache/${file}`);
+                array = JSON.parse(fileRed.toString());
+                return await this.insertItems(array).then((res: {}) => {
+                    response = res;
+                }).catch((e: any) => {
+                    return Promise.reject(e);
+                });
+
+            }
+        })).catch((e: any) => {
+            return Promise.reject(e);
+        })
+        return Promise.resolve(response);
+    }
+    /**
+     * 
+     * @param filename string of the file to update
+     * @returns Promise with a object or an error
+     * @description function that update the items in the database with the items in the file passed
+     */
+    static async updateItems(filename: string): Promise<{ itemInseriti: string[], itemNonInseriti: string[] } | {}> {
+        let array: [] = [];
+        let file = fs.readFileSync(`./cache/${filename}.json`);
+        array = JSON.parse(file.toString());
+        let itemsInseriti: string[] = [];
+        let itemsNonInseriti: string[] = [];
+        await Promise.all(
+            array.map(async (item: any) => {
+                await this.getItemById(item.idItem).then(async (res) => {
+                    if (res._id == "") {
+                        await this.insertItem(item).then(() => {
+                            itemsInseriti.push(item.idItem);
+                        }).catch((e: any) => {
+                            return Promise.reject(e)
+                        })
+                    } else {
+                        itemsNonInseriti.push(item.idItem);
+                    }
+                }).catch((e: any) => {
+                    return Promise.reject(e);
+                })
+            })
+        ).catch((e: any) => {
+            Promise.reject(e);
+        })
+        return Promise.resolve({
+            itemInseriti: itemsInseriti,
+            itemNonInseriti: itemsNonInseriti,
+        })
+    }
+
+
+    /**
+     * 
+     * @param items array of items to insert
+     * @returns Promise
+     * @description function that act as middleware that get the images of the items
+     */
+    static async getImage(itemsList: [{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
+        link: string
+    }]): Promise<[{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
+        link: string
+    }]> {
 
         const HttpsAgent = require("agentkeepalive").HttpsAgent;
         const keepAliveAgent = new Agent({
@@ -171,202 +417,221 @@ export default class ScraperController {
             freeSocketTimeout: 30000, // free socket keepalive for 30 seconds
         });
 
-
+        let buffer: string = "";
         let instance = axios.create({
             httpAgent: keepAliveAgent,
             httpsAgent: httpsKeepAliveAgent,
 
         })
-        let indexLast: number = 0;
-
-        try {
-            responseGetItems.map((item: any, index: any) => {
-
-                if (item.images.slice(0, 4) == "data") {
-                    item.imageBuffer = item.images;
-                    item.images = "";
-                    responseGetItems[index] = item;
-                    indexLast++;
-
-                    if (indexLast == itemsPerPage) {
-                        res.json({
-                            code: 200,
-                            items: responseGetItems,
-                            page: page,
-                            filters: filters,
-                            entries_per_page: itemsPerPage,
-                            total_items: total_items,
-                        })
+        await Promise.all(itemsList.map(async (item: any) => {
+            if (item.image.slice(0, 4) !== "data") {
+                return await instance.get(item.image, {
+                    responseType: 'arraybuffer',
+                    headers: {
+                        "Referer": item.link
                     }
-                } else {
-                    instance.get(item.images, {
-                        responseType: 'arraybuffer',
-                        headers: {
-                            "Referer": item.link
-                        }
-                    }).then((response: any) => {
-                        let buffered = Buffer.from(response.data, 'binary').toString("base64");
-                        item.imageBuffer = buffered;
-                        item.images = "";
-                        responseGetItems[index] = item;
-
-                        indexLast++;
-
-                        if (indexLast == itemsPerPage) {
-                            res.json({
-                                code: 200,
-                                items: responseGetItems,
-                                page: page,
-                                filters: filters,
-                                entries_per_page: itemsPerPage,
-
-                            })
-                        }
-                    })
-                }
-
-
-            })
-        } catch (e) {
-            res.json({
-                error: e,
-                status: "failed"
-            })
-
-        }
-
+                }).then((response: any) => {
+                    buffer = Buffer.from(response.data, 'binary').toString("base64");
+                    item.image = buffer;
+                }).catch((e: any) => {
+                    item.image = "No Image";
+                })
+            }
+        })).catch((e: any) => {
+            return Promise.reject(e);
+        })
+        return Promise.resolve(itemsList);
     }
 
 
-
-    static async apiInsertItem(req: any, res: any, next: any) {
-        let itemName = "",
-            cost = 0,
-            images: any,
-            storeName = "";
+    /**
+     * 
+     * @param item item to insert
+     * @returns promise object
+     * @description function that insert an item in the database
+     */
+    static async insertItem(item: {
+        itemName: string,
+        idItem: string,
+        cost: number,
+        image: string,
+        storeName: string,
+        link: string,
+    }): Promise<{}> {
         let insertItemResponse: any;
-        let query: any = null;
-        try {
-            query = req.body;
-        } catch (e) {
-            res.JSON({
-                error: e,
-                status: "failed"
-            })
-            console.error(`Can't retrive request.body ${e}`);
-        }
-
-        itemName = query.itemName;
-        cost = query.cost;
-        images = query.images;
-        storeName = query.storeName;
         try {
             insertItemResponse = await ScraperDao.insertItem({
-                itemName: itemName,
-                cost: cost,
-                images: images,
-                storeName: storeName,
+                itemName: item.itemName,
+                idItem: item.idItem,
+                cost: item.cost,
+                image: item.image,
+                storeName: item.storeName,
+                link: item.link,
+                popularity: 0,
             });
-        } catch (e) {
-            res.JSON({
-                error: e,
-                status: "failed"
-            })
-            console.error(`Problem in inserting order ${e}`);
+        } catch (e: any) {
+            return Promise.reject(e)
         }
 
-        res.json(insertItemResponse);
+        return Promise.resolve(
+            insertItemResponse
+        );
     }
+    /**
+     * 
+     * @param objectRetrived array of items to insert
+     * @returns Promise object
+     * @description function that insert an array of items in the database
+     */
+    static async insertItems(objectRetrived: [{}]): Promise<{}> {
+        let insertItemResponse: {};
+        insertItemResponse = await ScraperDao.insertItems(objectRetrived).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(insertItemResponse);
 
-    static async apiInsertItems(req: any, res: any, next: any, objectRetrived: Array<Object>) {
 
-        let insertItemsResponse: any;
-        try {
-            insertItemsResponse = await ScraperDao.insertItems(objectRetrived);
-        } catch (e) {
-            res.json({
-                error: e,
-                status: "failed"
-            })
-            console.error(`Problem in inserting order ${e}`);
-        }
-        res.json(insertItemsResponse);
+
     }
+    /**
+     * 
+     * @param itemName name of the item to get
+     * @returns Promise object
+     * @description function that get an item by id
+     */
+    static async getItemById(itemId: string): Promise<{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
 
-    static async apiGetItemById(res: any, itemName: string) {
-        console.log(`itemName: ${itemName}`)
-        let objectId: any;
-        try {
-            objectId = await ScraperDao.getItemByID(itemName);
-        } catch (e) {
-            res.json({
-                error: e,
-                status: "failed"
-            })
-            console.error(`Problem in inserting order ${e}`);
-        }
-        res.json(objectId);
+    }> {
+        let objectId: {
+            _id: string,
+            itemName: string,
+            cost: number,
+            idItem: string,
+            image: string,
+            storeName: string,
+            popularity: number
+        } = {
+            _id: "",
+            itemName: "",
+            cost: -1,
+            idItem: "",
+            image: "",
+            storeName: "",
+            popularity: 0
+        };
+
+        objectId = await ScraperDao.getItemByID(itemId).catch((e: any) => {
+            return Promise.reject(e)
+        })
+
+        return Promise.resolve(objectId);
     }
-
-    static async apiPopularity(res: any, itemName: string) {
+    /**
+     * 
+     * @param itemId id of the item to increment
+     * @returns Promise Object
+     * @description function that increment the popularity of an item
+     */
+    static async incrementPopularity(itemId: string): Promise<{}> {
         let response: any;
-        try {
-            response = await ScraperDao.incrementOne(itemName);
 
-        } catch (e) {
-            res.json({
-                error: e,
-                status: "failed"
-            })
-            console.error(`Problem in inserting popularity ${e}`);
+        response = await ScraperDao.incrementOne(itemId).catch((e: any) => {
+            return Promise.reject(e);
+        })
+        return Promise.resolve(response);
+
+    }
+
+    /**
+     * 
+     * @param req request
+     * @returns Promise of the response
+     * @description get the items from the db
+     */
+    static async getItem(reqQuery: any): Promise<{}> {
+        let responseItems: {
+            itemsList: [{
+                _id: string,
+                itemName: string,
+                cost: number,
+                idItem: string,
+                image: string,
+                storeName: string,
+                popularity: number
+                link: string
+            }],
+            totalItemsList: number;
+        } = {
+            itemsList: [{
+                _id: "",
+                itemName: "",
+                cost: -1,
+                idItem: "",
+                image: "",
+                storeName: "",
+                popularity: 0,
+                link: ""
+            }],
+            totalItemsList: 0
         }
-        res.json(response)
-    }
-
-    static async apiGetPopularity(req: any, res: any) {
-        let responseGetItems = await ScraperDao.getItemByPopularity();
-        console.log(this)
-        return await this.apiGetImage(responseGetItems, 5, 0, {}, 5, res);
-    }
-    static async apiGetItem(req: any, res: any) {
-
-        const itemsPerPage = req.query.itemsPerPage
-            ? parseInt(req.query.itemsPerPage, 10)
+        const itemsPerPage = reqQuery.itemsPerPage
+            ? parseInt(reqQuery.itemsPerPage, 10)
             : 20;
-        const page = req.query.page ? parseInt(req.query.page, 10) : 0;
+        const page = reqQuery.page ? parseInt(reqQuery.page, 10) : 0;
 
         let filters: any = {};
-
-        if (req.query.cost) {
-            filters.cost = req.query.cost;
-            filters.cost[0] = Number(filters.cost[0])
+        let sortBy: {} = {};
+        if (reqQuery.cost) {
+            filters.cost = Number(reqQuery.cost)
         }
 
-        if (req.query.itemName) {
-            filters.itemName = req.query.itemName;
+        if (reqQuery.itemName) {
+            filters.itemName = reqQuery.itemName;
         }
-        if (req.query.storeName) {
-            filters.storeName = req.query.storeName;
+        if (reqQuery.storeName) {
+            filters.storeName = reqQuery.storeName;
         }
-        if (req.query.$text) {
-            filters.$text = req.query.$text;
+        if (reqQuery.$text) {
+            filters.$text = reqQuery.$text;
         }
 
+        if (reqQuery.sortBy) {
+            sortBy = reqQuery.sortBy;
+        }
 
-        console.error(`request body: ${JSON.stringify(req.body)} `);
-        console.error(filters);
-        let responseGetItems = await ScraperDao.getItems({
+        responseItems = await ScraperDao.getItems({
             filters,
             page,
             itemsPerPage,
+            sortBy
+        }).catch((e: any) => {
+            return Promise.reject(e)
         })
-        if (responseGetItems.itemsList.length == 0) {
-            res.json({
-                code: 200,
-                items: []
-            })
-        }
-        return await this.apiGetImage(responseGetItems.itemsList, itemsPerPage, page, filters, responseGetItems.totalItemsList, res)
+
+
+        responseItems.itemsList = await this.getImage(responseItems.itemsList).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(responseItems);
+    }
+    /**
+     * @description function that delete all the items in the database
+     * @returns Promise object
+     */
+    static async deleteAll(): Promise<{}> {
+        await ScraperDao.deleteAllItems().catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve({
+            message: "deleted"
+        })
     }
 
 }

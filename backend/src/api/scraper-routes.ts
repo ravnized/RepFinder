@@ -3,49 +3,25 @@ import ScraperController from "./scraper-controller";
 
 const router = express.Router();
 router.route("/").get((req: any, res: any) => {
-    ScraperController.apiGetItem(req, res)
+    ScraperController.getItem(req.query).then((response) => {
+        return res.status(200).json(response)
+    }).catch((error: any) => {
+        return res.status(500).json(error)
+    })
 });
-router.route("/").post(ScraperController.apiInsertItem);
-router.route("/convert/").post((req: any, res: any, next: any) => {
-    ScraperController.converFileToItems(req.body.filename, req.body.url, req, res, next)
-});
-router.route("/scraper/").post((req: any, res: any, next: any) => {
-    let checkPasse = false;
-    if (req.body.scraper == "" || req.body.scraper == " " || req.body.scraper == undefined) {
-        checkPasse = false
-        return res.json({
-            error: "No url"
-        })
-    } else {
-        checkPasse = true
-    }
-    if (req.body.filename == "" || req.body.filename == " " || req.body.filename == undefined) {
-        checkPasse = false
-        return res.json({
-            error: "No filename"
-        })
-    } else {
-        checkPasse = true
-    }
-    if (checkPasse == true) {
-        ScraperController.scraperMain(req.body.scraper, req.body.filename, res);
-    }
-
-});
+//router.route("/").post(ScraperController.apiInsertItem);
 router.route("/searchByID").get((req: any, res: any, next: any) => {
-    console.log(req.query.id)
-    return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.apiGetItemById(res, req.query.id) : res.json({
+    return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.getItemById(req.query.id) : res.json({
         error: "No id"
     })
 })
-router.route("/incrementOne").get((req: any, res: any, next: any) => {
-    console.log(req.query.id)
-    return req.query.id !== "" || req.query.id !== " " || req.query.id !== undefined ? ScraperController.apiPopularity(res, req.query.id) : res.json({
-        error: "No id"
+router.route("/incrementOne").post((req: any, res: any, next: any) => {
+    ScraperController.incrementPopularity(req.query.id).then(() => {
+        return res.status(200).json({
+            message: "Incremented"
+        });
+    }).catch((e: any) => {
+        return res.status(500).json(e);
     })
 })
-router.route("/getPopularity").get((req: any, res: any) => {
-    ScraperController.apiGetPopularity(req, res)
-})
-
 export default router;

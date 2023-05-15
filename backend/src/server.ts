@@ -7,6 +7,9 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import ScraperDao from "./dao/scraperDao";
 import scraperRoutes from "./api/scraper-routes";
+import usersRoutes from "./api/users-routes";
+import UsersDao from "./dao/usersDao";
+import scraperPriviligedRoutes from "./api/scraper-routes-logged";
 const app = express();
 declare var process: {
 	env: {
@@ -24,11 +27,9 @@ mongoClient
 		console.error(err.stack);
 	})
 	.then(async (connection: any) => {
-		app.listen(process.env.PORT || 5000, "0.0.0.0", () => console.log("Server started"));
+		app.listen(process.env.PORT || 5001, "0.0.0.0", () => console.log("Server started"));
 		await ScraperDao.connDB(connection);
-		//let scraper = new ScraperDao();
-		//await scraper.getResponseData("https://chaosmade.x.yupoo.com/albums?page=1", "chaosMade");
-
+		await UsersDao.connDB(connection);
 	});
 
 
@@ -39,6 +40,8 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.use("/api/v1/items", scraperRoutes);
+app.use("/api/v1/users", usersRoutes);
+app.use("/api/v1/privileged-routes", scraperPriviligedRoutes);
 app.use("*", (req, res) => {
 	res.status(404).json({ error: "not found" });
 });
