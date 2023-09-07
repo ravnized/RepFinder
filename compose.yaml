@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: "./backend/"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+    volumes:
+      - ./backend/src:/code/src
+  mongo:
+    image: "mongo"
+    ports:
+      - "27017:27017"
+    command: ["--quiet" , '--logpath' , '/var/log/mongodb/mongod.log']

@@ -3,11 +3,14 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-
+import { CookiesProvider } from 'react-cookie';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ErrorPage from "./pages/ErrorPage";
 import WelcomePage from "./pages/WelcomePage";
 import SearchPage from "./pages/SearchPage";
+import LoginPage from "./pages/LoginPage";
+import LoginRoute from "./components/LoginRoute";
+import RegisterPage from "./pages/RegisterPage";
 const router = createBrowserRouter([
 	{
 		path: "/",
@@ -22,6 +25,14 @@ const router = createBrowserRouter([
 				path: "search/",
 				element: <SearchPage />,
 			},
+			{
+				path: "login/",
+				element: <LoginRoute><LoginPage/></LoginRoute>,
+			},
+			{
+				path: "register/",
+				element: <LoginRoute><RegisterPage/></LoginRoute>,
+			}
 		],
 	},
 ]);
@@ -32,7 +43,9 @@ const root = ReactDOM.createRoot(
 );
 root.render(
 	<React.StrictMode>
-		<RouterProvider router={router}></RouterProvider>
+		<CookiesProvider defaultSetOptions={{ path: '/' }}>
+			<RouterProvider router={router}></RouterProvider>
+		</CookiesProvider>
 	</React.StrictMode>,
 );
 

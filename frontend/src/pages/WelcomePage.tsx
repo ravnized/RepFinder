@@ -11,7 +11,7 @@ class WelcomePage extends React.Component<{}, {}> {
 					to find your item!
 				</p>
 
-				<PopularityItem />
+				
 			</div>
 		);
 	}

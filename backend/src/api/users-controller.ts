@@ -13,7 +13,7 @@ export default class UsersController {
      * @returns Promise with the token or error
      * @description Function for login
      */
-    static async login(req: any): Promise<string> {
+    static async login(req: any): Promise<{token: string}> {
         let email: string = req.body.email;
         let password: string = req.body.password;
         let user: usersObejct = {
@@ -44,7 +44,9 @@ export default class UsersController {
         }).catch((error) => {
             return Promise.reject(error);
         });
-        return Promise.resolve(token);
+        return Promise.resolve({
+            token: token
+        });
     }
     /**
      * @param req request
