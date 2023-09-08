@@ -73,7 +73,6 @@ export default class UsersController {
             name: name,
             lastName: lastName,
             role: role,
-
         };
         
 
@@ -90,24 +89,32 @@ export default class UsersController {
             message: "User created successfully"
         });
     }
+    
     /**
      * @param req request
      * @returns Promise object
      * @description Function for verify token
      */
     static async verifyToken(req: any): Promise<{}> {
+        
         let responseString: boolean = false;
+        let data: jose.JWTPayload = {};
+
         await UsersDao.verifyToken(req.body.token).then((response) => {
             responseString = response.success;
+            data = response.data;
+            //console.log(response);
         }
         ).catch((e) => {
             return Promise.reject({
-                response: e.error
+                response: e.error,
+                data: {}
             });
         }
         );
         return Promise.resolve({
-            response: responseString
+            response: responseString,
+            data: data
         });
     }
     /**

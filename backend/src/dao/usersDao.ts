@@ -205,8 +205,16 @@ export default class UsersDao {
      */
     static async verifyToken(token: string): Promise<{ success: boolean, error: string, data: jose.JWTPayload }> {
 
-        let responseReturn: jose.JWTPayload = {
 
+        
+        let responseReturn: jose.JWTPayload = {
+            user: {
+                email: "",
+                password: "",
+                name: "",
+                lastName: "",
+                role: 0,
+            },
             iss: "",
             sub: "",
             aud: "",
@@ -216,6 +224,9 @@ export default class UsersDao {
             iat: 0,
 
         }
+        
+
+    
 
         await jose.jwtVerify(token, this.secret).then((response: jose.JWTVerifyResult) => {
 

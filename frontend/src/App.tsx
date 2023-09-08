@@ -1,7 +1,7 @@
 import React from "react";
 import logo from "./logo.svg";
 import NavbarCustom from "./components/NavbarCustom";
-
+import { withCookies } from "react-cookie";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -15,4 +15,4 @@ function App() {
 	);
 }
 
-export default App;
+export default withCookies(App);
