@@ -2,7 +2,7 @@ services:
   backend:
     build: "./backend/"
     ports:
-      - "5000:5000"
+      - "5001:5001"
     depends_on:
       - mongo
     environment:
@@ -13,4 +13,13 @@ services:
     image: "mongo"
     ports:
       - "27017:27017"
-    command: ["--quiet" , '--logpath' , '/var/log/mongodb/mongod.log']
+    command: ["--quiet", "--logpath", "/var/log/mongodb/mongod.log"]
+  puppetter:
+    image: "ghcr.io/puppeteer/puppeteer:latest"
+    ports:
+      - "5002:5002"
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - /code/src
+    

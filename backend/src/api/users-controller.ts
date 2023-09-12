@@ -13,7 +13,7 @@ export default class UsersController {
      * @returns Promise with the token or error
      * @description Function for login
      */
-    static async login(req: any): Promise<{token: string}> {
+    static async login(req: any): Promise<{ token: string }> {
         let email: string = req.body.email;
         let password: string = req.body.password;
         let user: usersObejct = {
@@ -74,7 +74,7 @@ export default class UsersController {
             lastName: lastName,
             role: role,
         };
-        
+
 
         await UsersDao.createUser(user).then((response) => {
             return Promise.resolve(response);
@@ -89,14 +89,14 @@ export default class UsersController {
             message: "User created successfully"
         });
     }
-    
+
     /**
      * @param req request
      * @returns Promise object
      * @description Function for verify token
      */
     static async verifyToken(req: any): Promise<{}> {
-        
+
         let responseString: boolean = false;
         let data: jose.JWTPayload = {};
 
@@ -123,11 +123,12 @@ export default class UsersController {
      * @description Function for get role
      */
     static async getRole(req: any): Promise<{}> {
-        await UsersDao.verifyToken(req.body.token).then(async (response: {
+        await UsersDao.verifyToken(req.header('token')).then(async (response: {
             success: boolean,
             error: string,
             data: jose.JWTPayload
         }) => {
+            //console.log(req.header('token'));
             if (response.success) {
                 let user: any = response.data.user;
 

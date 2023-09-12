@@ -12,7 +12,8 @@ export default class ScraperController {
      * @returns a promise with a message
      * @description this is the creator of each scraper, the number of scraper is equal to the number of objects in the array
      */
-    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }], token: string }): Promise<{}> {
+    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }]}): Promise<{}> {
+        //console.log(arrayInfo);
         await Promise.all(arrayInfo.scraper.map(async (data: { url: string, filename: string }) => {
             return await this.scraperMain(data.url, data.filename).catch((err: any) => {
                 return Promise.reject(err)
@@ -35,9 +36,17 @@ export default class ScraperController {
         let pageMax: number;
         pageMax = 0;
         let count = 0;
+        
+
+        
+        
+
+
         let browser = await puppeteer.launch({
-            headless: true
+            headless: false,
+            
         });
+        //console.log("browser launched");
 
         pageMax = await this.getPageMax(url, browser);
         //generate an array with all the urls to scrape
