@@ -19,7 +19,7 @@ router.route("/register").post((req: any, res: any) => {
     })
 });
 
-router.route("/verifyToken").post( (req: any, res: any) => {
+router.route("/verifyToken").post((req: any, res: any) => {
     UsersController.verifyToken(req).then((response) => {
         return res.status(200).json(response)
     }).catch((error: any) => {

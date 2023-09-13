@@ -53,4 +53,12 @@ router.route("/deleteAll").post((req: any, res: any) => {
         return res.status(500).json(err);
     });
 });
+router.route("/getFiles").get((req: any, res: any) => {
+    
+    ScraperController.getFiles().then((result: any) => {
+        return res.status(200).json(result);
+    }).catch((err: any) => {
+        return res.status(500).json(err);
+    });
+});
 export default router;

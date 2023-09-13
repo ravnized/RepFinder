@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer';
 import axios from "axios";
 const Agent = require("agentkeepalive");
 import UserAgent from 'user-agents';
+import { forEach } from "async";
 export default class ScraperController {
 
     /**
@@ -12,7 +13,7 @@ export default class ScraperController {
      * @returns a promise with a message
      * @description this is the creator of each scraper, the number of scraper is equal to the number of objects in the array
      */
-    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }]}): Promise<{}> {
+    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }] }): Promise<{}> {
         //console.log(arrayInfo);
         await Promise.all(arrayInfo.scraper.map(async (data: { url: string, filename: string }) => {
             return await this.scraperMain(data.url, data.filename).catch((err: any) => {
@@ -22,6 +23,24 @@ export default class ScraperController {
             return Promise.reject(err)
         })
         return Promise.resolve({ message: "Scraping completed" })
+    }
+
+    /**
+         * @description function that get all the files in the cache folder
+         * @returns Promise array of string
+         */
+    static async getFiles(): Promise<[string]> {
+        let arrayDir = await fs.readdirSync(`${process.cwd()}/cache`);
+        let arrayFinal: [string] = [""];
+        forEach(arrayDir, (file: string) => {
+            if (file.includes(".json")) {
+                arrayFinal.push(file.replace(".json", ""));
+            }
+        })
+        arrayFinal.shift()
+
+        return Promise.resolve(arrayFinal);
+
     }
 
 
@@ -36,19 +55,16 @@ export default class ScraperController {
         let pageMax: number;
         pageMax = 0;
         let count = 0;
-        
-
-        
-        
-
-
-        let browser = await puppeteer.launch({
-            headless: false,
-            
+        let browser = await puppeteer.connect({ browserWSEndpoint: 'ws:puppeteer:5002' }).catch((e: any) => {
+            console.log(`error in browser ${e}`);
         });
         //console.log("browser launched");
-
-        pageMax = await this.getPageMax(url, browser);
+        //console.log(url)
+        await this.getPageMax(url, browser).catch((e: any) => {
+            return Promise.reject(e);
+        }).then((res: number) => {
+            pageMax = res;
+        })
         //generate an array with all the urls to scrape
         let urls: string[] = [];
         //https://chaosmade.x.yupoo.com/albums
@@ -61,12 +77,12 @@ export default class ScraperController {
         do {
             promises = urls.splice(0, 20);
 
-            console.log(promises);
+            //console.log(promises);
             // 20 at a time
             await Promise.all(promises.map(async (url: string, index: number) => {
                 await this.convertPage(url, browser)
                     .then(async (data: any) => {
-                        console.log(`creating file ${filename} ${index + 1 + (count * 20)}`)
+                        //console.log(`creating file ${filename} ${index + 1 + (count * 20)}`)
                         await this.createFile(filename, index + 1 + (count * 20), data.message)
                     })
                     .catch((err: any) => {
@@ -76,7 +92,7 @@ export default class ScraperController {
             count++;
 
         } while (urls.length)
-        await browser.close();
+
         return Promise.resolve({
             message: `Finito ${filename}`
         })
@@ -97,17 +113,18 @@ export default class ScraperController {
      */
     static async createFile(dirName: string, filename: number, content: string): Promise<{}> {
         try {
-            if (!fs.existsSync(`./cache`)) {
-                fs.mkdirSync(`./cache`);
+
+            if (!fs.existsSync(`${process.cwd()}/cache`)) {
+                fs.mkdirSync(`${process.cwd()}/cache`);
             }
-            if (!fs.existsSync(`./cache/stores`)) {
-                fs.mkdirSync(`./cache/stores`);
+            if (!fs.existsSync(`${process.cwd()}/cache/stores`)) {
+                fs.mkdirSync(`${process.cwd()}/cache/stores`);
             }
 
-            if (!fs.existsSync(`./cache/stores/${dirName}`)) {
-                fs.mkdirSync(`./cache/stores/${dirName}`);
+            if (!fs.existsSync(`${process.cwd()}/cache/stores/${dirName}`)) {
+                fs.mkdirSync(`${process.cwd()}/cache/stores/${dirName}`);
             }
-            fs.writeFileSync(`./cache/stores/${dirName}/${filename}`, `${content}`);
+            fs.writeFileSync(`${process.cwd()}/cache/stores/${dirName}/${filename}`, `${content}`);
 
         } catch (e) {
             return Promise.reject(e)
@@ -131,7 +148,7 @@ export default class ScraperController {
         let finalFile = "";
         let $ = cheerio.load("");
         try {
-            console.log(`visiting: ${url} with user agent: ${userAgent.toString()}`);
+            console.log(`visiting: ${url}`);
             page = await browser.newPage();
             await page.setUserAgent(userAgent.toString());
             await page.setDefaultNavigationTimeout(0);
@@ -147,8 +164,9 @@ export default class ScraperController {
                 })
             }
             if (htmlPage == "") {
-                return Promise.reject({
-                    message: `Empty page`,
+                //retry
+                return await this.convertPage(url, browser).catch((e: any) => {
+                    return Promise.reject(e);
                 })
             }
             $('.showindex__children').each((index: number, item: any) => {
@@ -178,18 +196,18 @@ export default class ScraperController {
         let htmlPage;
         let pageMax: number;
         try {
-
+            //console.log(`visiting: ${url} to get the max page`);
             page = await browser.newPage();
-            await page.setUserAgent(userAgent.toString());
-            await page.goto(url);
+            let user = await userAgent.toString();
+            await page.setUserAgent(user);
+            await page.goto(url)
             htmlPage = await page.content();
             await page.close();
-            let $ = cheerio.load(htmlPage);
-            pageMax = $('input[name=page]').attr('max');
-
+            let $ = await cheerio.load(htmlPage);
+            pageMax = await $('input[name=page]').attr('max');
         } catch (e) {
-            return Promise.reject(0);
-
+            // console.log(e);
+            return Promise.reject(e);
         }
         return Promise.resolve(pageMax);
     }
@@ -205,7 +223,7 @@ export default class ScraperController {
         image: string,
         storeName: string,
         link: string,
-    }[] | { error: string }> {
+    }[]> {
         let responseArray: [{
             itemName: string,
             idItem: string,
@@ -302,19 +320,20 @@ export default class ScraperController {
      */
     static async converterFilesToItems(): Promise<{}> {
         let arrayDir = fs.readdirSync(`./cache/stores`);
-        let arrayData = [{}];
+        let arrayData: {}[] = [{}];
 
 
 
         await Promise.all(arrayDir.map(async (directory: string) => {
             return await this.getResponseFromItem(directory).then((response) => {
+
                 fs.writeFileSync(`./cache/${directory}.json`, JSON.stringify(response));
-                arrayData.push(response);
+                arrayData = response;
             }).catch((e) => {
                 return Promise.reject(e)
             })
         })).catch((e) => {
-            console.log(e);
+            //console.log(e);
             return Promise.reject(e);
         })
 
@@ -352,31 +371,38 @@ export default class ScraperController {
      * @returns Promise with a object or an error
      * @description function that update the items in the database with the items in the file passed
      */
-    static async updateItems(filename: string): Promise<{ itemInseriti: string[], itemNonInseriti: string[] } | {}> {
-        let array: [] = [];
-        let file = fs.readFileSync(`./cache/${filename}.json`);
-        array = JSON.parse(file.toString());
+    static async updateItems(filenameArray: []): Promise<{ itemInseriti: string[], itemNonInseriti: string[] } | {}> {
         let itemsInseriti: string[] = [];
         let itemsNonInseriti: string[] = [];
-        await Promise.all(
-            array.map(async (item: any) => {
-                await this.getItemById(item.idItem).then(async (res) => {
-                    if (res._id == "") {
-                        await this.insertItem(item).then(() => {
-                            itemsInseriti.push(item.idItem);
-                        }).catch((e: any) => {
-                            return Promise.reject(e)
-                        })
-                    } else {
-                        itemsNonInseriti.push(item.idItem);
-                    }
-                }).catch((e: any) => {
-                    return Promise.reject(e);
+        console.log(filenameArray);
+
+        forEach(filenameArray, async (filename: string) => {
+            let array: [] = [];
+            let file = fs.readFileSync(`/cache/${filename}.json`);
+            array = await JSON.parse(file.toString());
+            
+            await Promise.all(
+                array.map(async (item: any) => {
+                    await this.getItemById(item.idItem).then(async (res) => {
+                        //console.log(res._id);
+                        if (res._id == undefined) {
+                            await this.insertItem(item).then(() => {
+                                itemsInseriti.push(item.idItem);
+                            }).catch((e: any) => {
+                                return Promise.reject(e)
+                            })
+                        } else {
+                            itemsNonInseriti.push(item.idItem);
+                        }
+                    }).catch((e: any) => {
+                        return Promise.reject(e);
+                    })
                 })
+            ).catch((e: any) => {
+                Promise.reject(e);
             })
-        ).catch((e: any) => {
-            Promise.reject(e);
         })
+
         return Promise.resolve({
             itemInseriti: itemsInseriti,
             itemNonInseriti: itemsNonInseriti,
@@ -642,5 +668,6 @@ export default class ScraperController {
             message: "deleted"
         })
     }
+
 
 }

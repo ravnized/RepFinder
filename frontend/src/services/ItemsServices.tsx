@@ -12,7 +12,7 @@ class ItemsDataServices {
 	) {
 		//let baseUrl = "http://127.0.0.1:5001/api/v1/items";
 		let baseUrl =
-			"http://localhost:5000/api/v1/items";
+			"http://localhost:5001/api/v1/items";
 		let finalUrl = baseUrl;
 		finalUrl += `?page=${page}`;
 		if (cost !== 0) {

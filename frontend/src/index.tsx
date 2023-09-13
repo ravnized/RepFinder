@@ -11,6 +11,7 @@ import SearchPage from "./pages/SearchPage";
 import LoginPage from "./pages/LoginPage";
 import LoginRoute from "./components/LoginRoute";
 import RegisterPage from "./pages/RegisterPage";
+import DashBoard from "./pages/DashBoard";
 const router = createBrowserRouter([
 	{
 		path: "/",
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
 			{
 				path: "register/",
 				element: <LoginRoute><RegisterPage/></LoginRoute>,
+			},
+			{
+				path: "dashboard/",
+				element: <DashBoard />,
 			}
 		],
 	},

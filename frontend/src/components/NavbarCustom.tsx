@@ -25,8 +25,10 @@ function NavbarCustom() {
 					<Navbar.Collapse id="responsive-navbar-nav">
 						<Nav className="me-auto justify-content-end flex-grow-1 pe-3">
 							<Link to={"/search"}>Search</Link>
-							<TokenChecker name="login" link="login" />
-							<TokenChecker name="register" link="register" />
+							<TokenChecker invert={false} name="login" link="login" />
+							<TokenChecker invert={false} name="register" link="register" />
+							<TokenChecker invert={true} name="logout" link="logout" />
+							<TokenChecker invert={true} name="dashboard" link="dashboard" />
 						</Nav>
 					</Navbar.Collapse>
 				</Container>

@@ -75,7 +75,6 @@ export default class UsersController {
             role: role,
         };
 
-
         await UsersDao.createUser(user).then((response) => {
             return Promise.resolve(response);
         }).catch((error) => {

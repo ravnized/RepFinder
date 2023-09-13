@@ -1,6 +1,7 @@
 import React from "react";
 import {LoginDataServices} from "../services/UsersServices";
 import { withCookies } from "react-cookie";
+import { Navigate } from "react-router-dom";
 
 //Class login page that comunicate with the main page to pass around the token
 
@@ -31,6 +32,7 @@ class LoginPage extends React.Component<{ cookies: any }, {error: string, token:
 				} else {
 					this.handleTokenChange(res.token);
 					this.setState({ error: "" });
+					window.location.href = "/";
 				}
 			})
 			.catch((e) => {

@@ -226,8 +226,6 @@ export default class UsersDao {
         }
         
 
-    
-
         await jose.jwtVerify(token, this.secret).then((response: jose.JWTVerifyResult) => {
 
             if (response.payload.iat !== undefined && response.payload.exp !== undefined) {

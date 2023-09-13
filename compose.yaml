@@ -9,17 +9,30 @@ services:
       - MONGODB_URI=mongodb://mongo:27017
     volumes:
       - ./backend/src:/code/src
+      - ./backend/cache:/code/cache
   mongo:
     image: "mongo"
     ports:
       - "27017:27017"
+    volumes:
+      - ./db:/data/db
     command: ["--quiet", "--logpath", "/var/log/mongodb/mongod.log"]
-  puppetter:
-    image: "ghcr.io/puppeteer/puppeteer:latest"
+  puppeteer:
+    image: browserless/chrome
     ports:
       - "5002:5002"
-    cap_add:
-      - SYS_ADMIN
+    environment:
+      - PORT=5002
+      - CONNECTION_TIMEOUT=-1
+      - DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true
+      - ALLOW_FILE_PROTOCOL=true
+  frontend:
+    build: "./frontend/"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+      - puppeteer
     volumes:
-      - /code/src
-    
+      - ./frontend/src:/codeFrontend/src
+      - ./frontend/public:/codeFrontend/public
