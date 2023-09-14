@@ -173,7 +173,7 @@ export default class ScraperDao {
                 error: `Error in finding items: ${e}`
             })
         };
-        return Promise.resolve(itemsList);
+        return Promise.resolve(itemsList[0]);
 
     }
 

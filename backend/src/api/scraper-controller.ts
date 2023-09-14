@@ -319,7 +319,7 @@ export default class ScraperController {
      * @description function that convert all the files in the cache/stores directory to json files
      */
     static async converterFilesToItems(): Promise<{}> {
-        let arrayDir = fs.readdirSync(`./cache/stores`);
+        let arrayDir = fs.readdirSync(`${process.cwd()}/cache/stores`);
         let arrayData: {}[] = [{}];
 
 
@@ -327,7 +327,7 @@ export default class ScraperController {
         await Promise.all(arrayDir.map(async (directory: string) => {
             return await this.getResponseFromItem(directory).then((response) => {
 
-                fs.writeFileSync(`./cache/${directory}.json`, JSON.stringify(response));
+                fs.writeFileSync(`${process.cwd()}/cache/${directory}.json`, JSON.stringify(response));
                 arrayData = response;
             }).catch((e) => {
                 return Promise.reject(e)
@@ -374,34 +374,48 @@ export default class ScraperController {
     static async updateItems(filenameArray: []): Promise<{ itemInseriti: string[], itemNonInseriti: string[] } | {}> {
         let itemsInseriti: string[] = [];
         let itemsNonInseriti: string[] = [];
-        console.log(filenameArray);
+        //console.log(filenameArray);
 
-        forEach(filenameArray, async (filename: string) => {
+        await Promise.all(filenameArray.map(async (filename: string) => {
+            console.log(`updating ${filename}`);
             let array: [] = [];
-            let file = fs.readFileSync(`/cache/${filename}.json`);
+            let file = fs.readFileSync(`${process.cwd()}/cache/${filename}.json`);
+            if (file.toString() === "") return Promise.resolve({
+                message: "file empty"
+            });
             array = await JSON.parse(file.toString());
-            
             await Promise.all(
                 array.map(async (item: any) => {
+
                     await this.getItemById(item.idItem).then(async (res) => {
-                        //console.log(res._id);
-                        if (res._id == undefined) {
+                        //console.log(`updating item ${item.idItem}`)
+                        if (res === undefined) {
+                            //console.log(`inserting item ${item.idItem}`)
                             await this.insertItem(item).then(() => {
                                 itemsInseriti.push(item.idItem);
                             }).catch((e: any) => {
+                                //console.log(`error in insert item ${e}, ${item.idItem}`)
                                 return Promise.reject(e)
                             })
                         } else {
+                            //console.log(`not inserting item ${item.idItem}`)
                             itemsNonInseriti.push(item.idItem);
                         }
                     }).catch((e: any) => {
+                        console.log(`error in getItemsById items ${e}`)
                         return Promise.reject(e);
                     })
                 })
             ).catch((e: any) => {
+                console.log(`error in promise items ${e}`)
                 Promise.reject(e);
             })
+        })).catch((e: any) => {
+            console.log(`error in promise filename ${e}`)
+            return Promise.reject(e);
         })
+
+
 
         return Promise.resolve({
             itemInseriti: itemsInseriti,
@@ -565,7 +579,6 @@ export default class ScraperController {
         objectId = await ScraperDao.getItemByID(itemId).catch((e: any) => {
             return Promise.reject(e)
         })
-
         return Promise.resolve(objectId);
     }
     /**

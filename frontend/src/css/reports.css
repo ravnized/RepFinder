@@ -1,0 +1,17 @@
+.reportList {
+	display: flex;
+    justify-content: space-evenly;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    margin: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    align-content: center;
+    align-items: center;
+}
+
+.reportList > p {
+    color: white;
+    margin-top: 0;
+    margin-bottom: 0;
+}

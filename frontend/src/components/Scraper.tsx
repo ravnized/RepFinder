@@ -167,7 +167,7 @@ class Updater extends React.Component<
 		message: string;
 		error: string;
 		filesArray: [];
-		filesToUpdate: string [];
+		filesToUpdate: string[];
 	}
 > {
 	constructor(props: any) {
@@ -180,12 +180,14 @@ class Updater extends React.Component<
 		};
 	}
 	async getFiles() {
-		await ScraperServices.getFiles(this.props.token).then((res: []) => {
-			this.setState({ filesArray: res });
-		}).catch((error) => {
-			this.setState({ error: error });
-			this.props.onStateChange(this.state.error, "");
-		});
+		await ScraperServices.getFiles(this.props.token)
+			.then((res: []) => {
+				this.setState({ filesArray: res });
+			})
+			.catch((error) => {
+				this.setState({ error: error });
+				this.props.onStateChange(this.state.error, "");
+			});
 	}
 
 	render(): React.ReactNode {
@@ -224,20 +226,27 @@ class Updater extends React.Component<
 						<button
 							onClick={(e) => {
 								e.preventDefault();
+
 								ScraperServices.updateDatabase(
 									this.props.token,
-									this.state.filesArray,
+									this.state.filesToUpdate,
 								)
 									.then((res: any) => {
-										this.setState({ message: res.message });
-										this.props.onStateChange("", res.message);
+										//console.log(res);
+										let resInseriti =
+											res.itemInseriti === undefined ? 0 : res.itemInseriti.length;
+										let message = `Updated ${resInseriti} items`;
+										this.setState({ message: message });
+										this.props.onStateChange("", message);
 									})
 									.catch((error) => {
 										this.setState({ error: error });
-										this.props.onStateChange(this.state.error, "");
+										this.props.onStateChange(error, "");
 									});
 							}}
-						>Update Items</button>
+						>
+							Update Items
+						</button>
 					</div>
 				)}
 			</div>
@@ -245,4 +254,43 @@ class Updater extends React.Component<
 	}
 }
 
-export { Scraper, Converter, Updater };
+class DeleteAll extends React.Component<
+	{ token: string; onStateChange: (error: string, message: string) => void },
+	{
+		message: string;
+		error: string;
+	}
+> {
+	constructor(props: any) {
+		super(props);
+		this.state = {
+			message: "",
+			error: "",
+		};
+	}
+	render(): React.ReactNode {
+		return (
+			<div>
+				<button
+					onClick={(e) => {
+						e.preventDefault();
+						ScraperServices.deleteAll(this.props.token)
+							.then((res: any) => {
+								let message = res.message;
+								this.setState({ message: message });
+								this.props.onStateChange("", message);
+							})
+							.catch((error: any) => {
+								this.setState({ error: error });
+								this.props.onStateChange(error, "");
+							});
+					}}
+				>
+					Delete All
+				</button>
+			</div>
+		);
+	}
+}
+
+export { Scraper, Converter, Updater, DeleteAll };

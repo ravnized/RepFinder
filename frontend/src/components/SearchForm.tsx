@@ -56,9 +56,8 @@ class SearchForm extends React.Component<
 			this.state.page,
 		)
 			.then((res) => {
-				console.log(res);
-				this.setState({ items: res.items });
-				this.props.itemsRaw(res.items);
+				this.setState({ items: res.itemsList });
+				this.props.itemsRaw(res.itemsList);
 				this.props.watingResponse("");
 				this.setState({ stateButtonSearch: "" });
 			})

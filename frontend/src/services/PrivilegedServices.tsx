@@ -53,9 +53,8 @@ class ScraperServices {
 
 		return Promise.resolve(await req.json());
 	}
-	static async updateDatabase(token: string, filename: []): Promise<[]> {
-		let baseUrl =
-			"http://localhost:5001/api/v1/privileged-routes/updateItems";
+	static async updateDatabase(token: string, filename: string[]): Promise<[]> {
+		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/updateItems";
 
 		let req = await fetch(baseUrl, {
 			method: "POST",
@@ -71,6 +70,20 @@ class ScraperServices {
 			return Promise.reject([error]);
 		});
 
+		return Promise.resolve(await req.json());
+	}
+	static async deleteAll(token: string): Promise<[]> {
+		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/deleteAll";
+		let req = await fetch(baseUrl, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				token: token,
+				"User-agent": "RepFinder-Frontend/1.0.0",
+			},
+		}).catch((error) => {
+			return Promise.reject([error]);
+		});
 		return Promise.resolve(await req.json());
 	}
 }

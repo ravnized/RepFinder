@@ -10,6 +10,9 @@ import scraperRoutes from "./api/scraper-routes";
 import usersRoutes from "./api/users-routes";
 import UsersDao from "./dao/usersDao";
 import scraperPriviligedRoutes from "./api/scraper-routes-logged";
+import reportRoutesLogged from "./api/report-routes-logged";
+import reportRoutes from "./api/report-routes";
+import ReportDao from "./dao/reportDao";
 const app = express();
 declare var process: {
 	env: {
@@ -29,6 +32,7 @@ mongoClient
 		app.listen(5001, "0.0.0.0", () => console.log("Server started"));
 		await ScraperDao.connDB(connection);
 		await UsersDao.connDB(connection);
+		await ReportDao.connDB(connection);
 	});
 
 
@@ -41,6 +45,9 @@ app.use(cookieParser());
 app.use("/api/v1/items", scraperRoutes);
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/privileged-routes", scraperPriviligedRoutes);
+app.use("/api/v1/privileged-reports", reportRoutesLogged);
+app.use("/api/v1/reports", reportRoutes);
+
 app.use("*", (req, res) => {
 	res.status(404).json({ error: "not found" });
 });

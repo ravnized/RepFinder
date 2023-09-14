@@ -33,6 +33,8 @@ class SearchPage extends React.Component<
 		this.setState({ status: status });
 	}
 
+	
+
 	render(): React.ReactNode {
 		return (
 			<Container>
@@ -42,7 +44,7 @@ class SearchPage extends React.Component<
 					pagePassed={this.state.page}
 					watingResponse={(status) => this.waitingResponse(status)}
 				/>
-				{this.state.items.length > 0 ? (
+				{ this.state.items !== undefined && this.state.items.length > 0 ? (
 					<ButtonsForm
 						page={(page) => this.pageValue(page)}
 						statusResponse={this.state.status}
@@ -51,7 +53,7 @@ class SearchPage extends React.Component<
 					""
 				)}
 				<ItemsCard responseValue={this.state.items} />
-				{this.state.items.length > 0 ? (
+				{this.state.items !== undefined && this.state.items.length > 0 ? (
 					<ButtonsForm
 						page={(page) => this.pageValue(page)}
 						statusResponse={this.state.status}

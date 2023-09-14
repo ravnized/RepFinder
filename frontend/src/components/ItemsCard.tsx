@@ -32,12 +32,14 @@ class ItemsCard extends React.Component<
 	}
 
 	render(): ReactNode {
+		
 		return (
 			<div className="allItems">
-				{this.state.items.length !== 0 ? (
+				{this.state.items !== undefined && this.state.items.length !== 0 ? (
 					<Container>
 						<Row lg={3} xs={1} md={2}>
 							{this.state.items.map((item: any, index: number) => (
+								
 								<div
 									className="cardElement"
 									key={index}
@@ -55,9 +57,9 @@ class ItemsCard extends React.Component<
 											<Card.Img
 												variant="top"
 												src={
-													item.imageBuffer.slice(0, 4) === "data"
-														? `${item.imageBuffer}`
-														: `data:image/jpeg;base64,${item.imageBuffer}`
+													item.image.slice(0, 4) === "data"
+														? `${item.image}`
+														: `data:image/jpeg;base64,${item.image}`
 												}
 											></Card.Img>
 											<Card.Body>
