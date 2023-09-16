@@ -7,6 +7,7 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Button from "react-bootstrap/Button";
 import React from "react";
 import gsap from "gsap";
+import { FaBeer } from "react-icons/fa";
 import "../css/ItemCard.css";
 class ItemsCard extends React.Component<
 	{
@@ -32,14 +33,12 @@ class ItemsCard extends React.Component<
 	}
 
 	render(): ReactNode {
-		
 		return (
 			<div className="allItems">
 				{this.state.items !== undefined && this.state.items.length !== 0 ? (
 					<Container>
 						<Row lg={3} xs={1} md={2}>
 							{this.state.items.map((item: any, index: number) => (
-								
 								<div
 									className="cardElement"
 									key={index}
@@ -54,6 +53,16 @@ class ItemsCard extends React.Component<
 								>
 									<Col className="column">
 										<Card>
+											<Button
+												onClick={() => {
+													console.log(item._id);
+												}}
+												className="deleteButton"
+												variant="danger"
+											>
+												{" "}
+												<FaBeer />
+											</Button>
 											<Card.Img
 												variant="top"
 												src={

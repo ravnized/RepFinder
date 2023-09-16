@@ -682,5 +682,53 @@ export default class ScraperController {
         })
     }
 
+    /**
+     * 
+     * @param req request
+     * @returns Promise object
+     * @description function that update the cost of an item
+     */
+
+    static async updateCost(req: any): Promise<{}> {
+        let response: any;
+        let itemName: string = req.body.item;
+        let cost: number = req.body.cost;
+        response = await ScraperDao.updateCost(itemName, cost).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(response);
+    }
+
+    /**
+     * 
+     * @param req request
+     * @returns Promise object
+     * @description function that update the name of an item
+     */
+    static async updateItemName(req: any): Promise<{}> {
+        let response: any;
+        let itemId: string = req.body.item;
+        let name: string = req.body.name;
+        response = await ScraperDao.updateItemName(itemId, name).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(response);
+    }
+
+    /**
+     * 
+     * @param req request
+     * @returns Promise object
+     * @description function that delete an item
+     */
+
+    static async deleteItem(req: any): Promise<{}> {
+        let response: any;
+        let _id: string = req.body._id;
+        response = await ScraperDao.deleteItem(_id).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(response);
+    }
 
 }

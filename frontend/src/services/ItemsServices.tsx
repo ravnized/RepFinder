@@ -32,7 +32,7 @@ class ItemsDataServices {
 	}
 	static async getPopularity() {
 		let baseUrl =
-			"http://backend-repfinder.fqavgjc6anc7awa8.germanywestcentral.azurecontainer.io:5000/api/v1/items/getPopularity";
+			"http://localhost:5001/api/v1/items/getPopularity";
 		let response = await fetch(baseUrl, {
 			method: "GET",
 			headers: {

@@ -61,4 +61,33 @@ router.route("/getFiles").get((req: any, res: any) => {
         return res.status(500).json(err);
     });
 });
+
+//update cost
+router.route("/updateCost").post((req: any, res: any) => {
+    ScraperController.updateCost(req.body).then((result: any) => {
+        return res.status(200).json(result);
+    }).catch((err: any) => {
+        return res.status(500).json(err);
+    });
+});
+
+//update name
+router.route("/updateName").post((req: any, res: any) => {
+    ScraperController.updateItemName(req.body).then((result: any) => {
+        return res.status(200).json(result);
+    }).catch((err: any) => {
+        return res.status(500).json(err);
+    });
+});
+
+//delete item
+router.route("/deleteItem").post((req: any, res: any) => {
+    ScraperController.deleteItem(req.body).then((result: any) => {
+        return res.status(200).json(result);
+    }).catch((err: any) => {
+        return res.status(500).json(err);
+    });
+});
+
+
 export default router;

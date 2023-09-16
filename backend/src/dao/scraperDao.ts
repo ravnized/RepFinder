@@ -279,5 +279,77 @@ export default class ScraperDao {
         */
     }
 
+    static async updateCost(itemId: string, cost: number): Promise<{}> {
+        await this.getItemByID(itemId).catch((e: any) => {
+            return Promise.reject({
+                error: `Unable to get item, ${e}`,
+            });
+        }).then(async (res: any) => {
+            if (res.cost === cost) {
+                try {
+                    await items.updateOne(
+                        { "idItem": itemId },
+                        { $set: { "cost": cost } }
+                    )
+                } catch (e) {
+                    return Promise.reject({
+                        error: `Unable to update item, ${e}`,
+                    });
+                }
+            } else {
+                return Promise.reject({
+                    error: `Unable to update item`,
+                });
+            }
 
+        })
+        return Promise.resolve({
+            "message": "success",
+        });
+    }
+
+    static async updateItemName(itemId: string, itemName: string): Promise<{}> {
+        await this.getItemByID(itemId).catch((e: any) => {
+            return Promise.reject({
+                error: `Unable to get item, ${e}`,
+            });
+        }).then(async (res: any) => {
+            if (res.itemName === itemName) {
+                try {
+                    await items.updateOne(
+                        { "idItem": itemId },
+                        { $set: { "itemName": itemName } }
+                    )
+                } catch (e) {
+                    return Promise.reject({
+                        error: `Unable to update item, ${e}`,
+                    });
+                }
+            } else {
+                return Promise.reject({
+                    error: `Unable to update item`,
+                });
+            }
+
+        })
+        return Promise.resolve({
+            "message": "success",
+        });
+    }
+
+    static async deleteItem(_id: string): Promise<{}> {
+        let ObjectID = require('mongodb').ObjectID;
+        let objId = new ObjectID(_id);
+
+        try {
+            await items.deleteOne({ "_id": objId });
+        } catch (e) {
+            return Promise.reject({
+                error: `Unable to delete item, ${e}`,
+            });
+        }
+        return Promise.resolve({
+            "message": "success",
+        });
+    }
 }
