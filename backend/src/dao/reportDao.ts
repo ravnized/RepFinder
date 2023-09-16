@@ -38,7 +38,7 @@ export default class ReportDao {
         itemName = "",
         cost = 0,
         idItem = "",
-        needTodelete = false,
+        needToDelete = false,
     }): Promise<
         {}
     > {
@@ -49,7 +49,7 @@ export default class ReportDao {
             itemName,
             cost,
             idItem,
-            needTodelete
+            needToDelete
         };
 
 

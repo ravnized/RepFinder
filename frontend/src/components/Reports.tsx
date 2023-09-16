@@ -39,13 +39,13 @@ class AllReport extends React.Component<
 					) : (
 						<></>
 					)}
-					{report.needTodelete !== "false" ? (
-						<p className="deleteItem">Need to delete: <br/>{report.needTodelete}</p>
+					{report.needToDelete !== "false" ? (
+						<p className="deleteItem">Need to delete: <br/>{report.needToDelete}</p>
 					) : (
 						<></>
 					)}
 
-					{report.needTodelete !== "false" ? (
+					{report.needToDelete !== "false" ? (
 						<Button
 							onChange={() => {
 								console.log("Delete");

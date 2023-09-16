@@ -6,8 +6,9 @@ export default class ReportController {
             itemName: req.body.itemName,
             cost: req.body.cost,
             idItem: req.body.idItem,
-            needTodelete: req.body.needToDelete
+            needToDelete: req.body.needToDelete
         }
+        console.log(report)
 
 
         await ReportDao.insertReport(report).catch((error: any) => {
