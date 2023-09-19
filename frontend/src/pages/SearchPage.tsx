@@ -39,10 +39,10 @@ class SearchPage extends React.Component<
 		return (
 			<Container>
 				<SearchForm
-					itemsRaw={(items) => this.getValueForm(items)}
-					page={(page) => this.pageValue(page)}
+					itemsRaw={(items: []) => this.getValueForm(items)}
+					page={(page : number) => this.pageValue(page)}
 					pagePassed={this.state.page}
-					watingResponse={(status) => this.waitingResponse(status)}
+					watingResponse={(status: string) => this.waitingResponse(status)}
 				/>
 				{ this.state.items !== undefined && this.state.items.length > 0 ? (
 					<ButtonsForm

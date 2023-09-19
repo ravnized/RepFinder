@@ -1,11 +1,9 @@
-import React from "react";
-
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import { Link } from "react-router-dom";
 import TokenChecker from "./CookieChecker";
-
+import '../css/NavbarCustom.css';
 function NavbarCustom() {
 	return (
 		<div className="navbar-main">
@@ -24,11 +22,11 @@ function NavbarCustom() {
 					<Navbar.Toggle aria-controls="responsive-navbar-nav" />
 					<Navbar.Collapse id="responsive-navbar-nav">
 						<Nav className="me-auto justify-content-end flex-grow-1 pe-3">
-							<Link to={"/search"}>Search</Link>
-							<TokenChecker invert={false} name="login" link="login" />
-							<TokenChecker invert={false} name="register" link="register" />
-							<TokenChecker invert={true} name="logout" link="logout" />
-							<TokenChecker invert={true} name="dashboard" link="dashboard" />
+							<Link className="navBarLink" to={"/search"}>SEARCH</Link>
+							<TokenChecker invert={false} name="LOGIN" link="login" />
+							<TokenChecker invert={false} name="REGISTER" link="register" />
+							<TokenChecker invert={true} name="LOGOUT" link="logout" />
+							<TokenChecker invert={true} name="DASHBOARD" link="dashboard" />
 						</Nav>
 					</Navbar.Collapse>
 				</Container>

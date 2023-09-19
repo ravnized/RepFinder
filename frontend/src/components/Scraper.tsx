@@ -24,7 +24,6 @@ function Scraper(props: any) {
 	const handleScrape = useCallback(() => {
 		sendJsonMessage({ scraper: inputArray, token: props.token });
 	}, [inputArray, props.token, sendJsonMessage]);
-	let scraper_completed: any = [];
 	useEffect(() => {
 		if (last_json_message !== null) {
 			let filename = last_json_message.filename;
@@ -39,7 +38,7 @@ function Scraper(props: any) {
 				props.onStateChange("Scraping completed", "");
 			}
 		}
-	}, [last_json_message, progressObject, props, scraper_completed]);
+	}, [last_json_message, progressObject, props]);
 
 	let input = [];
 	for (let i = 0; i < nInput; i++) {

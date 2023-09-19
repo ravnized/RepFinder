@@ -96,6 +96,7 @@ export default class ScraperDao {
         //console.log(`requested query ${JSON.stringify(query)}`);
         //console.log(JSON.stringify(items))
         let cursor: any;
+        console.log(`query: ${JSON.stringify(query)}`)
         try {
             cursor = await items.find(query).sort(sortBy)
         } catch (e: any) {
@@ -395,6 +396,43 @@ export default class ScraperDao {
     }
 
 
+    //get stores names from database and return them
+    static async getStoreName(): Promise<{}> {
+        let cursor: any;
+        let storesNames: any;
+        try {
+            cursor = await items.aggregate([
+                {
+                    $group: {
+                        _id: "$storeName"
+                    }
+                }
+            ])
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Error in finding items: ${e}`
+            })
+        };
+        let displayCursor;
+        try {
+            displayCursor = await cursor
+                .limit(20)
+                .skip(20 * 0);
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Error in finding items: ${e}`
+            })
+        };
 
+        try {
+            storesNames = await displayCursor.toArray();
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Error in finding items: ${e}`
+            })
+        };
+        return Promise.resolve(storesNames);
+
+    }
 
 }

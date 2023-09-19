@@ -656,12 +656,20 @@ export default class ScraperController {
             ? parseInt(reqQuery.itemsPerPage, 10)
             : 20;
         const page = reqQuery.page ? parseInt(reqQuery.page, 10) : 0;
-
+        console.log(reqQuery);
         let filters: any = {};
         let sortBy: {} = {};
+        
         if (reqQuery.cost) {
-            filters.cost = Number(reqQuery.cost)
+            filters.cost = [
+                Number(reqQuery.cost[0]),
+                reqQuery.cost[1]
+            ]
+                
+            
         }
+
+
 
         if (reqQuery.itemName) {
             filters.itemName = reqQuery.itemName;
@@ -789,6 +797,14 @@ export default class ScraperController {
             }
         ).catch((e: any) => {
             console.log(`getItem ${e.error}`);
+            return Promise.reject(e)
+        })
+        return Promise.resolve(response);
+    }
+
+    static async getStoreName(): Promise<{}> {
+        let response: any;
+        response = await ScraperDao.getStoreName().catch((e: any) => {
             return Promise.reject(e)
         })
         return Promise.resolve(response);

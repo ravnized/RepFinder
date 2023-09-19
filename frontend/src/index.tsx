@@ -12,6 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import LoginRoute from "./components/LoginRoute";
 import RegisterPage from "./pages/RegisterPage";
 import DashBoard from "./pages/DashBoard";
+import Logout from "./pages/Logout";
 const router = createBrowserRouter([
 	{
 		path: "/",
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
 						<LoginPage />
 					</LoginRoute>
 				),
+			},
+			{
+				path: "logout/",
+				element: <Logout />,
 			},
 			{
 				path: "register/",

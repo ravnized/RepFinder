@@ -24,4 +24,13 @@ router.route("/incrementOne").post((req: any, res: any, next: any) => {
         return res.status(500).json(e);
     })
 })
+
+router.route("/getStores").get((req: any, res: any, next: any) => {
+    ScraperController.getStoreName().then((data: any) => {
+        return res.status(200).json(data);
+    }).catch((e: any) => {
+        return res.status(500).json(e);
+    })
+})
+
 export default router;
