@@ -1,119 +1,124 @@
-import React from "react";
+import React, {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useState,
+} from "react";
 import ScraperServices from "../services/PrivilegedServices";
-
-class Scraper extends React.Component<
-	{ token: string; onStateChange: (error: string, message: string) => void },
-	{
-		message: string;
-		error: string;
-		nInput: number;
-		inputArray: [{ filename: string; url: string }];
-	}
-> {
-	constructor(props: any) {
-		super(props);
-		this.state = {
-			message: "",
-			error: "",
-			nInput: 1,
-			inputArray: [{ filename: "", url: "" }],
-		};
-	}
-
-	async scraper(filenameUrl: [{ filename: string; url: string }]) {
-		await ScraperServices.scraping(filenameUrl, this.props.token)
-			.then((res) => {
-				if (res["data"] === undefined) {
-					this.props.onStateChange(res.error.message, "");
-					this.setState({ error: res.error.message });
-				} else {
-					this.props.onStateChange("", res["data"].message);
-					this.setState({ message: res["data"].message });
-				}
-			})
-			.catch((error) => {
-				this.props.onStateChange(error, "");
-				this.setState({ error: error });
-			});
-	}
-
-	/*
-	componentDidUpdate(prevProps: Readonly<{ token: string; }>, prevState: Readonly<{ message: string; error: string; nInput: number; input: [JSX.Element] }>, snapshot?: any): void {
-		let nInput = this.state.nInput;
-		let input = this.state.input;
-		for (let i = 0; i < nInput; i++) {
-			input.push(
-				<div key={i}>
-					<input type="text" placeholder="url"/>
-					<input type="text" placeholder="filename"/>
-				</div>,
-			);
+import useWebSocket from "react-use-websocket";
+import { Button, Col, Container, ProgressBar, Row } from "react-bootstrap";
+import "../css/Scraper.css";
+function Scraper(props: any) {
+	const [message, setMessage] = useState("");
+	const [error, setError] = useState("");
+	const [nInput, setNInput] = useState(1);
+	const [inputArray, setInputArray] = useState([{ filename: "", url: "" }]);
+	const [progressObject, setProgressObject] = useState([]);
+	const [socketUrl, setSocketUrl] = useState(
+		"ws://localhost:5001/scraperMultiWs",
+	);
+	//const [messageHistory, setMessageHistory] = useState([]);
+	const { sendJsonMessage, lastJsonMessage } = useWebSocket(socketUrl);
+	const last_json_message: any = lastJsonMessage;
+	const progress_object: any = progressObject;
+	const handleScrape = useCallback(() => {
+		sendJsonMessage({ scraper: inputArray, token: props.token });
+	}, [inputArray, props.token, sendJsonMessage]);
+	let scraper_completed: any = [];
+	useEffect(() => {
+		if (last_json_message !== null) {
+			let filename = last_json_message.filename;
+			let progress = last_json_message.percent;
+			console.log(`Filename: ${filename} Progress: ${progress}`);
+			let arrayProgress: any = progressObject;
+			arrayProgress[filename] = progress;
+			setProgressObject(arrayProgress);
+			console.log(last_json_message);
+			if (progress === 100) {
+				console.log("finito");
+				props.onStateChange("Scraping completed", "");
+			}
 		}
-		this.setState({ input: input });
-	}
+	}, [last_json_message, progressObject, props, scraper_completed]);
 
-	 */
-	// create a form with 2 input, one for the url and one for the filename
-	// and a button that can add more input
-	render(): React.ReactNode {
-		let nInput = this.state.nInput;
-		let input = [];
-
-		for (let i = 0; i < nInput; i++) {
-			input.push(
-				<div key={i}>
-					<input
-						type="text"
-						placeholder="url"
-						onChange={(e) => {
-							let inputArray = this.state.inputArray;
-							if (inputArray[i] === undefined) {
-								inputArray.push({ filename: "", url: "" });
-							}
-							inputArray[i].url = e.target.value;
-							this.setState({ inputArray: inputArray });
-						}}
-					/>
-					<input
-						type="text"
-						placeholder="filename"
-						onChange={(e) => {
-							let inputArray = this.state.inputArray;
-							if (inputArray[i] === undefined) {
-								inputArray.push({ filename: "", url: "" });
-							}
-							inputArray[i].filename = e.target.value;
-							this.setState({ inputArray: inputArray });
-						}}
-					/>
-				</div>,
-			);
-		}
-		return (
-			<div>
-				<form>
-					{input}
-					<button
-						onClick={(e) => {
-							e.preventDefault();
-							this.setState({ nInput: nInput + 1 });
-						}}
-					>
-						Add input
-					</button>
-					<button
-						onClick={(e) => {
-							e.preventDefault();
-							this.scraper(this.state.inputArray);
-						}}
-					>
-						Scrape
-					</button>
-				</form>
-			</div>
+	let input = [];
+	for (let i = 0; i < nInput; i++) {
+		input.push(
+			<Row key={i}>
+				<Row className="rowInput">
+					<h4>Input {i + 1}</h4>
+					<Col>
+						<input
+							type="text"
+							placeholder="url"
+							onChange={(e) => {
+								let arrayInput = inputArray;
+								arrayInput[i].url = e.target.value;
+								setInputArray(arrayInput);
+							}}
+						/>
+					</Col>
+					<Col>
+						<input
+							type="text"
+							placeholder="filename"
+							onChange={(e) => {
+								let arrayInput = inputArray;
+								arrayInput[i].filename = e.target.value;
+								setInputArray(arrayInput);
+							}}
+						/>
+					</Col>
+				</Row>
+				<Row>
+					{inputArray[i].filename === undefined ||
+					progress_object[inputArray[i].filename] === undefined ? (
+						<></>
+					) : (
+						<ProgressBar
+							now={progress_object[inputArray[i].filename]}
+							label={`${progress_object[inputArray[i].filename]}%`}
+						/>
+					)}
+				</Row>
+			</Row>,
 		);
 	}
+	return (
+		<div>
+			<form>
+				{input}
+				<Row>
+					<Col>
+						<Button
+							onClick={(e) => {
+								e.preventDefault();
+								let input = nInput;
+								input++;
+								setInputArray([...inputArray, { filename: "", url: "" }]);
+								setNInput(input);
+							}}
+						>
+							Add input
+						</Button>
+					</Col>
+					<Col>
+						<Button
+							variant="secondary"
+							onClick={(e) => {
+								e.preventDefault();
+								handleScrape();
+							}}
+						>
+							Scrape
+						</Button>
+					</Col>
+				</Row>
+			</form>
+		</div>
+	);
 }
+
 class Converter extends React.Component<
 	{ token: string; onStateChange: (error: string, message: string) => void },
 	{
@@ -234,7 +239,9 @@ class Updater extends React.Component<
 									.then((res: any) => {
 										//console.log(res);
 										let resInseriti =
-											res.itemInseriti === undefined ? 0 : res.itemInseriti.length;
+											res.itemInseriti === undefined
+												? 0
+												: res.itemInseriti.length;
 										let message = `Updated ${resInseriti} items`;
 										this.setState({ message: message });
 										this.props.onStateChange("", message);

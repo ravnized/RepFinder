@@ -1,6 +1,5 @@
 .reportList {
 	display: flex;
-    justify-content: space-evenly;
     background: rgba(0, 0, 0, 0.7);
     border-radius: 10px;
     margin: 10px;
@@ -10,8 +9,67 @@
     align-items: center;
 }
 
-.reportList > p {
+.reportList > div >p {
     color: white;
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.disabled {
+    color: grey;
+}
+
+.offcanvas-body{
+    flex-direction: column;
+    display: flex;
+}
+
+.needToBeDeletedRow{
+    flex-flow: wrap;
+    align-content: space-evenly;
+    justify-content: center;
+    display: flex;
+}
+
+.buttonPaint{
+    background-color: #dfdb0b;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 2px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.buttonPaint:hover{
+    background-color: #f1f1f1;
+    color: black;
+}
+
+.buttonTrash{
+    background-color: #f44336;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 2px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.buttonTrash:hover{
+    background-color: #f1f1f1;
+    color: black;
+}
+
+.reportInfo{
+    justify-content: space-evenly;
+    display: flex;
 }

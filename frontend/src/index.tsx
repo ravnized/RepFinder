@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { CookiesProvider } from 'react-cookie';
+import { CookiesProvider } from "react-cookie";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ErrorPage from "./pages/ErrorPage";
 import WelcomePage from "./pages/WelcomePage";
@@ -28,30 +28,35 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "login/",
-				element: <LoginRoute><LoginPage/></LoginRoute>,
+				element: (
+					<LoginRoute>
+						<LoginPage />
+					</LoginRoute>
+				),
 			},
 			{
 				path: "register/",
-				element: <LoginRoute><RegisterPage/></LoginRoute>,
+				element: (
+					<LoginRoute>
+						<RegisterPage />
+					</LoginRoute>
+				),
 			},
 			{
 				path: "dashboard/",
 				element: <DashBoard />,
-			}
+			},
 		],
 	},
 ]);
-
 
 const root = ReactDOM.createRoot(
 	document.getElementById("root") as HTMLElement,
 );
 root.render(
-	<React.StrictMode>
-		<CookiesProvider defaultSetOptions={{ path: '/' }}>
-			<RouterProvider router={router}></RouterProvider>
-		</CookiesProvider>
-	</React.StrictMode>,
+	<CookiesProvider defaultSetOptions={{ path: "/" }}>
+		<RouterProvider router={router}></RouterProvider>
+	</CookiesProvider>,
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -6,6 +6,7 @@ import axios from "axios";
 const Agent = require("agentkeepalive");
 import UserAgent from 'user-agents';
 import { forEach } from "async";
+import { Response } from "express";
 export default class ScraperController {
 
     /**
@@ -13,15 +14,16 @@ export default class ScraperController {
      * @returns a promise with a message
      * @description this is the creator of each scraper, the number of scraper is equal to the number of objects in the array
      */
-    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }] }): Promise<{}> {
+    static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }] }, ws: any): Promise<{}> {
         //console.log(arrayInfo);
         await Promise.all(arrayInfo.scraper.map(async (data: { url: string, filename: string }) => {
-            return await this.scraperMain(data.url, data.filename).catch((err: any) => {
+            return await this.scraperMain(data.url, data.filename, ws).catch((err: any) => {
                 return Promise.reject(err)
             })
         })).catch((err: any) => {
             return Promise.reject(err)
         })
+
         return Promise.resolve({ message: "Scraping completed" })
     }
 
@@ -51,10 +53,11 @@ export default class ScraperController {
      * @returns Promise with a message
      * @description function that manage all the pages of the url passed
      */
-    static async scraperMain(url: string, filename: string): Promise<{}> {
+    static async scraperMain(url: string, filename: string, ws: any): Promise<{}> {
         let pageMax: number;
         pageMax = 0;
         let count = 0;
+        let countForProgess = 0;
         let browser = await puppeteer.connect({ browserWSEndpoint: 'ws:puppeteer:5002' }).catch((e: any) => {
             console.log(`error in browser ${e}`);
         });
@@ -82,12 +85,23 @@ export default class ScraperController {
             await Promise.all(promises.map(async (url: string, index: number) => {
                 await this.convertPage(url, browser)
                     .then(async (data: any) => {
+                        countForProgess++;
                         //console.log(`creating file ${filename} ${index + 1 + (count * 20)}`)
                         await this.createFile(filename, index + 1 + (count * 20), data.message)
+                        let percent = Math.round(countForProgess / pageMax * 100);
+                        ws.send(JSON.stringify({
+                            filename: filename,
+                            percent: percent,
+                        }))
+
+
+
+
                     })
                     .catch((err: any) => {
                         return Promise.reject(err);
                     })
+
             }))
             count++;
 
@@ -96,6 +110,7 @@ export default class ScraperController {
         return Promise.resolve({
             message: `Finito ${filename}`
         })
+
 
 
 
@@ -148,7 +163,7 @@ export default class ScraperController {
         let finalFile = "";
         let $ = cheerio.load("");
         try {
-            console.log(`visiting: ${url}`);
+            //console.log(`visiting: ${url}`);
             page = await browser.newPage();
             await page.setUserAgent(userAgent.toString());
             await page.setDefaultNavigationTimeout(0);
@@ -232,6 +247,7 @@ export default class ScraperController {
             storeName: string,
             link: string,
             popularity: number,
+            blackList: boolean,
         }] = [{
             itemName: "",
             idItem: "",
@@ -240,6 +256,7 @@ export default class ScraperController {
             storeName: "",
             link: "",
             popularity: 0,
+            blackList: false,
         }]
 
         try {
@@ -296,6 +313,7 @@ export default class ScraperController {
                         storeName: directory,
                         link: link.replace(/\s/g, ""),
                         popularity: 0,
+                        blackList: false,
                     }
 
                     responseArray.push(response);
@@ -438,7 +456,8 @@ export default class ScraperController {
         image: string,
         storeName: string,
         popularity: number
-        link: string
+        link: string,
+        blackList: boolean
     }]): Promise<[{
         _id: string,
         itemName: string,
@@ -448,6 +467,7 @@ export default class ScraperController {
         storeName: string,
         popularity: number
         link: string
+        blackList: boolean
     }]> {
 
         const HttpsAgent = require("agentkeepalive").HttpsAgent;
@@ -577,6 +597,7 @@ export default class ScraperController {
         };
 
         objectId = await ScraperDao.getItemByID(itemId).catch((e: any) => {
+            console.log(`getItemById ${e.error}`)
             return Promise.reject(e)
         })
         return Promise.resolve(objectId);
@@ -614,6 +635,7 @@ export default class ScraperController {
                 storeName: string,
                 popularity: number
                 link: string
+                blackList: boolean
             }],
             totalItemsList: number;
         } = {
@@ -625,7 +647,8 @@ export default class ScraperController {
                 image: "",
                 storeName: "",
                 popularity: 0,
-                link: ""
+                link: "",
+                blackList: false
             }],
             totalItemsList: 0
         }
@@ -653,6 +676,11 @@ export default class ScraperController {
         if (reqQuery.sortBy) {
             sortBy = reqQuery.sortBy;
         }
+        filters.blackList = [
+            true, "$ne"
+        ]
+
+
 
         responseItems = await ScraperDao.getItems({
             filters,
@@ -715,6 +743,20 @@ export default class ScraperController {
         return Promise.resolve(response);
     }
 
+    static async updateItem(req: any): Promise<{}> {
+        let response: any;
+        let _id: string = req._id;
+        let itemName: string = req.itemName;
+        let cost: number = Number(req.itemCost);
+        let itemNameChanged: boolean = req.itemNameChanged;
+        let itemCostChanged: boolean = req.itemCostChanged;
+
+        response = await ScraperDao.updateItem(_id, itemName, itemNameChanged, cost, itemCostChanged).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve(response);
+    }
+
     /**
      * 
      * @param req request
@@ -722,10 +764,31 @@ export default class ScraperController {
      * @description function that delete an item
      */
 
-    static async deleteItem(req: any): Promise<{}> {
+    static async blacklistItem(req: any): Promise<{}> {
+
         let response: any;
-        let _id: string = req.body._id;
-        response = await ScraperDao.deleteItem(_id).catch((e: any) => {
+        let _id: string = req.item_id;
+
+        let itemId = req.itemId;
+
+
+        await this.getItemById(itemId).then(
+            async (res: any) => {
+
+
+                if (res._id.toString() !== _id) {
+                    return Promise.reject({
+                        error: "Item not found"
+                    })
+                } else {
+                    response = await ScraperDao.blacklistItem(_id).catch((e: any) => {
+                        console.log(`deleteItem ${e}`);
+                        return Promise.reject(e)
+                    })
+                }
+            }
+        ).catch((e: any) => {
+            console.log(`getItem ${e.error}`);
             return Promise.reject(e)
         })
         return Promise.resolve(response);

@@ -3,12 +3,13 @@ import ReportDao from "../dao/reportDao";
 export default class ReportController {
     static async reportSubmit(req: any) {
         let report = {
+            item_id: req.body._id,
             itemName: req.body.itemName,
             cost: req.body.cost,
             idItem: req.body.idItem,
             needToDelete: req.body.needToDelete
         }
-        console.log(report)
+        
 
 
         await ReportDao.insertReport(report).catch((error: any) => {

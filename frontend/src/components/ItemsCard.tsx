@@ -23,6 +23,7 @@ class ItemsCard extends React.Component<
 		itemName: string;
 		itemCost: number;
 		needToBeDeleted: boolean;
+		_id: string;
 	}
 > {
 	constructor(props: any) {
@@ -35,6 +36,7 @@ class ItemsCard extends React.Component<
 			itemName: "",
 			itemCost: 0,
 			needToBeDeleted: false,
+			_id: "",
 		};
 	}
 
@@ -52,7 +54,6 @@ class ItemsCard extends React.Component<
 					onHide={() => {
 						this.setState({ handle: false });
 					}}
-					placement="bottom"
 				>
 					<Offcanvas.Header closeButton>
 						<Offcanvas.Title>Report</Offcanvas.Title>
@@ -64,31 +65,54 @@ class ItemsCard extends React.Component<
 							value={this.state.idItem}
 							onChange={(e: any) => this.setState({ idItem: e.target.value })}
 						/>
-						<label>Item Name</label>
-						<input
-							id="itemName"
-							value={this.state.itemName}
-							onChange={(e: any) => this.setState({ itemName: e.target.value })}
-						/>
-						<label>Cost</label>
-						<input
-							id="itemCost"
-							value={this.state.itemCost}
-							onChange={(e: any) => this.setState({ itemCost: e.target.value })}
-						/>
-						<label>Need To be Deleted?</label>
-						<input
-							id="needToBeDeleted"
-							type="checkbox"
-							onChange={(e: any) => {
-								if (e.target.value === "on")
-									this.setState({ needToBeDeleted: true });
-								else this.setState({ needToBeDeleted: false });
-							}}
-						/>
+						<Row>
+							<Col>
+								<label>Item Name</label>
+							</Col>
+							<Col>
+								<input
+									id="itemName"
+									value={this.state.itemName}
+									onChange={(e: any) =>
+										this.setState({ itemName: e.target.value })
+									}
+								/>
+							</Col>
+						</Row>
+						<Row>
+							<Col>
+								<label>Cost</label>
+							</Col>
+							<Col>
+								<input
+									id="itemCost"
+									value={this.state.itemCost}
+									onChange={(e: any) =>
+										this.setState({ itemCost: e.target.value })
+									}
+								/>
+							</Col>
+						</Row>
+						<Row>
+							<Col>
+								<label>Delete?</label>
+							</Col>
+							<Col>
+								<input
+									id="needToBeDeleted"
+									type="checkbox"
+									onChange={(e: any) => {
+										if (e.target.value === "on")
+											this.setState({ needToBeDeleted: true });
+										else this.setState({ needToBeDeleted: false });
+									}}
+								/>
+							</Col>
+						</Row>
 						<Button
 							onClick={() => {
 								ReportServices.reportItem(
+									this.state._id,
 									this.state.idItem,
 									this.state.itemCost,
 									this.state.itemName,
@@ -125,6 +149,7 @@ class ItemsCard extends React.Component<
 													onClick={() => {
 														console.log(item);
 														this.setState({
+															_id: item._id,
 															idItem: item.idItem,
 															itemName: item.itemName,
 															itemCost: item.cost,

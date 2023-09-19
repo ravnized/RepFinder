@@ -1,7 +1,8 @@
 import express from "express";
 import ScraperController from "./scraper-controller";
 import UsersController from "./users-controller";
-const router = express.Router();
+var router = express.Router();
+
 
 router.use((req: any, res: any, next: any) => {
     UsersController.getRole(req).then((result: any) => {
@@ -20,6 +21,10 @@ router.route("/converter/").post((req: any, res: any) => {
         res.status(500).json(err)
     });
 });
+
+
+
+/*
 router.route("/scraperMulti/").post((req: any, res: any) => {
     ScraperController.scraperMulti(req.body).then((data: any) => {
         return res.status(200).json({
@@ -32,6 +37,7 @@ router.route("/scraperMulti/").post((req: any, res: any) => {
             });
         });
 });
+*/
 router.route("/callerInsertItems").post((req: any, res: any) => {
     ScraperController.callerInsertItems().then((result: any) => {
         return res.status(200).json(result)
@@ -54,7 +60,7 @@ router.route("/deleteAll").post((req: any, res: any) => {
     });
 });
 router.route("/getFiles").get((req: any, res: any) => {
-    
+
     ScraperController.getFiles().then((result: any) => {
         return res.status(200).json(result);
     }).catch((err: any) => {
@@ -62,18 +68,9 @@ router.route("/getFiles").get((req: any, res: any) => {
     });
 });
 
-//update cost
-router.route("/updateCost").post((req: any, res: any) => {
-    ScraperController.updateCost(req.body).then((result: any) => {
-        return res.status(200).json(result);
-    }).catch((err: any) => {
-        return res.status(500).json(err);
-    });
-});
-
-//update name
-router.route("/updateName").post((req: any, res: any) => {
-    ScraperController.updateItemName(req.body).then((result: any) => {
+//update items
+router.route("/update").post((req: any, res: any) => {
+    ScraperController.updateItem(req.body).then((result: any) => {
         return res.status(200).json(result);
     }).catch((err: any) => {
         return res.status(500).json(err);
@@ -81,13 +78,15 @@ router.route("/updateName").post((req: any, res: any) => {
 });
 
 //delete item
-router.route("/deleteItem").post((req: any, res: any) => {
-    ScraperController.deleteItem(req.body).then((result: any) => {
+router.route("/blacklistItem").post((req: any, res: any) => {
+
+    ScraperController.blacklistItem(req.body).then((result: any) => {
         return res.status(200).json(result);
     }).catch((err: any) => {
         return res.status(500).json(err);
     });
 });
+
 
 
 export default router;

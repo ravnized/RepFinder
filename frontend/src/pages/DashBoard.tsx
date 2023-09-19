@@ -1,63 +1,70 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Scraper, Converter, Updater, DeleteAll } from "../components/Scraper";
-import { withCookies } from "react-cookie";
+import { useCookies } from "react-cookie";
 import { AllReport } from "../components/Reports";
-class DashBoard extends React.Component<
-	{ cookies: any },
-	{ token: string; message: string; error: string }
-> {
-	constructor(props: any) {
-		super(props);
-		const { cookies } = props;
-		this.state = {
-			token: cookies.get("token") || "",
-			message: "",
-			error: "",
-		};
-	}
+import { Container, Tab, Tabs, Toast, ToastContainer } from "react-bootstrap";
 
-	handleConvertState = (message: string, error: string) => {
-		this.setState({ message: message, error: error });
-		if (message !== "") {
-			alert(message);
-		} else {
-			alert(error);
+function DashBoard(props: any) {
+	const [cookies, setCookie] = useCookies(["token"]);
+	const [message, setMessage] = useState("");
+	const [error, setError] = useState("");
+	const [showA, setShowA] = useState(false);
+	const toggleShowA = () => {
+		setShowA(!showA);
+		if(showA) setMessage("");
+	};
+	const handleConvertState = (messagePass: string, errorPass: string) => {
+		if (message !== messagePass) {
+			setMessage(messagePass);
+			toggleShowA();
+		}
+		if (error !== errorPass) {
+			setError(error);
 		}
 	};
 
-	render(): React.ReactNode {
-		return (
-			<div>
-				<h1>Dashboard</h1>
-				<h2>Scraper</h2>
-				<h3>Scrape File</h3>
-				<Scraper
-					token={this.state.token}
-					onStateChange={this.handleConvertState}
-				/>
-				<h3>Convert Files</h3>
-				<Converter
-					token={this.state.token}
-					onStateChange={this.handleConvertState}
-				/>
-				<h3>Update Database</h3>
-				<Updater
-					token={this.state.token}
-					onStateChange={this.handleConvertState}
-				/>
-				<h3>Delete All</h3>
-				<DeleteAll
-					token={this.state.token}
-					onStateChange={this.handleConvertState}
-				/>
+	return (
+		<>
+			<ToastContainer position="bottom-end" style={{ zIndex: 1 }}>
+				<Toast show={showA} onClose={toggleShowA}>
+					<Toast.Header></Toast.Header>
+					<Toast.Body>{message}</Toast.Body>
+				</Toast>
+			</ToastContainer>
 
-				<h2>Report</h2>
-				<AllReport
-					token={this.state.token}
-					onStateChange={this.handleConvertState}
-				/>
-			</div>
-		);
-	}
+			<Container>
+				<Tabs
+					defaultActiveKey="reports"
+					id="uncontrolled-tab-example"
+					className="mb-3"
+				>
+					<Tab eventKey="reports" title="Reports">
+						<h2>Reports</h2>
+						<AllReport
+							token={cookies.token}
+							onStateChange={handleConvertState}
+						/>
+					</Tab>
+					<Tab eventKey="scraper" title="Scraper">
+						<h3>Scrape File</h3>
+						<Scraper token={cookies.token} onStateChange={handleConvertState} />
+						<h3>Convert Files</h3>
+						<Converter
+							token={cookies.token}
+							onStateChange={handleConvertState}
+						/>
+						<h3>Update Database</h3>
+						<Updater token={cookies.token} onStateChange={handleConvertState} />
+						<h3>Delete All</h3>
+						<DeleteAll
+							token={cookies.token}
+							onStateChange={handleConvertState}
+						/>
+					</Tab>
+				</Tabs>
+			</Container>
+		</>
+	);
 }
-export default withCookies(DashBoard);
+
+export default DashBoard;

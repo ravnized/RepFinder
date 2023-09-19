@@ -1,3 +1,4 @@
+import { forEach } from "async";
 
 let items: any;
 interface filtersArray {
@@ -60,20 +61,23 @@ export default class ScraperDao {
             idItem: string,
             image: string,
             storeName: string,
-            popularity: number
-            link: string
+            popularity: number,
+            link: string,
+            blackList: boolean,
         }],
         totalItemsList: number;
     }> {
         let itemName = "",
             cost: any = [],
             storeName = "",
-            $text;
+            $text,
+            blackList = false;
         let query: any = {
             itemName,
             cost,
             storeName,
             $text,
+            blackList,
         }
         for (let querySingle in query) {
             let filterArray: any = filters[querySingle]
@@ -82,8 +86,9 @@ export default class ScraperDao {
                     [filterArray[1], filterArray[0]]
                 ]);
                 let object = Object.fromEntries(entries)
-                //console.log(`oggetto: ${JSON.stringify(object)}`)
+
                 query[querySingle] = object;
+
             } else {
                 delete query[querySingle];
             }
@@ -337,13 +342,14 @@ export default class ScraperDao {
         });
     }
 
-    static async deleteItem(_id: string): Promise<{}> {
+    static async blacklistItem(_id: string): Promise<{}> {
         let ObjectID = require('mongodb').ObjectID;
         let objId = new ObjectID(_id);
 
         try {
-            await items.deleteOne({ "_id": objId });
+            await items.updateOne({ "_id": objId }, { $set: { "blackList": true } });
         } catch (e) {
+            console.log(`deleteOne : ${e}`)
             return Promise.reject({
                 error: `Unable to delete item, ${e}`,
             });
@@ -352,4 +358,43 @@ export default class ScraperDao {
             "message": "success",
         });
     }
+
+    static async updateItem(_id: string, itemName: string, itemNameChanged: boolean, cost: number, itemCostChanged: boolean): Promise<{}> {
+
+        let ObjectID = require('mongodb').ObjectID;
+        let objId = new ObjectID(_id);
+        let item: any;
+
+        let query: { itemName?: string, cost?: number } = {
+            itemName: "",
+            cost: 0,
+        }
+
+        if (itemNameChanged) {
+            query.itemName = itemName;
+        } else {
+            delete query.itemName;
+        }
+        if (itemCostChanged) {
+            query.cost = cost;
+        } else {
+            delete query.cost;
+        }
+
+        console.log(`query: ${JSON.stringify(query)}`)
+
+        await items.updateOne({ "_id": objId }, { $set: query }).catch((e: any) => {
+            console.log(`updateOne : ${e}`)
+            return Promise.reject({
+                error: `Unable to update item, ${e}`,
+            });
+        })
+        return Promise.resolve({
+            "message": "success",
+        });
+    }
+
+
+
+
 }

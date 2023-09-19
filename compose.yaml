@@ -7,6 +7,7 @@ services:
       - mongo
     environment:
       - MONGODB_URI=mongodb://mongo:27017
+      - NODE_OPTIONS="--max-old-space-size=8192"
     volumes:
       - ./backend/src:/code/src
       - ./backend/cache:/code/cache

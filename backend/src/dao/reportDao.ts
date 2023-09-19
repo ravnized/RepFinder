@@ -35,6 +35,7 @@ export default class ReportDao {
      * @description Function for inserting one report in the database
      */
     static async insertReport({
+        item_id = "",
         itemName = "",
         cost = 0,
         idItem = "",
@@ -46,6 +47,7 @@ export default class ReportDao {
         let cursor: any;
 
         let report = {
+            item_id,
             itemName,
             cost,
             idItem,

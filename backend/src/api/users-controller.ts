@@ -164,4 +164,47 @@ export default class UsersController {
             error: ""
         })
     }
+    static async getRoleWs(msg: any): Promise<{}> {
+        await UsersDao.verifyToken(msg.token).then(async (response: {
+            success: boolean,
+            error: string,
+            data: jose.JWTPayload
+        }) => {
+            //console.log(req.header('token'));
+            if (response.success) {
+                let user: any = response.data.user;
+
+                if (user.role === 0) {
+                    return Promise.reject({
+                        success: false,
+                        error: "User not authorized"
+                    })
+                } else {
+
+                    await UsersDao.getRole(user.email).then((response: {
+                        success: boolean,
+                        error: string,
+                        role: number
+                    }) => {
+                        if (response.role !== 1) {
+                            return Promise.reject({
+                                success: false,
+                                error: "User not authorized"
+                            })
+                        }
+
+                    }).catch((e: any) => {
+                        return Promise.reject(e)
+                    });
+
+                }
+            }
+        }).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve({
+            success: true,
+            error: ""
+        })
+    }
 }
