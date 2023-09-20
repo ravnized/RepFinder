@@ -184,6 +184,57 @@ export default class ScraperDao {
     }
 
 
+    static async getItemBy_ID(
+        idItem: string
+    ): Promise<{
+        _id: string;
+        itemName: string;
+        cost: number;
+        idItem: string;
+        image: string;
+        link: string;
+        storeName: string;
+        popularity: number;
+    }
+    > {
+
+        let query = {
+            _id: "",
+        }
+        let ObjectID = require('mongodb').ObjectID;
+        let objId = new ObjectID(idItem);
+        query._id = objId
+        let cursor: any;
+        let itemsList: any;
+        try {
+            cursor = await items.find(query)
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Error in finding items: ${e}`
+            })
+        };
+        let displayCursor;
+        try {
+            displayCursor = await cursor
+                .limit(20)
+                .skip(20 * 0);
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Error in finding items: ${e}`
+            })
+        };
+
+        try {
+            itemsList = await displayCursor.toArray();
+        } catch (e: any) {
+            return Promise.reject({
+                error: `Error in finding items: ${e}`
+            })
+        };
+        return Promise.resolve(itemsList[0]);
+
+    }
+
     /**
      * 
      * @param param0 itemName, cost, image, storeName, idItem, link, popularity
@@ -364,7 +415,6 @@ export default class ScraperDao {
 
         let ObjectID = require('mongodb').ObjectID;
         let objId = new ObjectID(_id);
-        let item: any;
 
         let query: { itemName?: string, cost?: number } = {
             itemName: "",

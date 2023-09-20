@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useLayoutEffect } from "react";
+import React, {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
@@ -9,13 +15,11 @@ import Spinner from "react-bootstrap/Spinner";
 import "../css/SearchForm.css";
 
 function SearchForm(props: any) {
-	const [valueSpinner, setValueSpinner] = React.useState(0);
-	const [valueItemName, setValueItemName] = React.useState("");
-	const [valueSelector, setValueSelector] = React.useState("$eq");
-	const [items, setItems] = React.useState([]);
-	const [page, setPage] = React.useState(0);
-	const [stateButtonSearch, setStateButtonSearch] = React.useState("");
-	const [storeName, setStoreName] = React.useState("");
+	const valueSpinner = useRef(0);
+	const valueItemName = useRef("");
+	const valueSelector = useRef("$eq");
+	const [stateButtonSearch, setStateButtonSearch] = useState("");
+	const storeName = useRef("");
 	const [storeNameList, setStoreNameList] = React.useState([]);
 	function handleSubmit(e: any) {
 		e.preventDefault();
@@ -37,40 +41,14 @@ function SearchForm(props: any) {
 				setStoreNameList(storenameList);
 			});
 	}
-
-	const submitSearch = useCallback(() => {
-		props.watingResponse("Wait");
-		setStateButtonSearch("disabled");
-		ItemsDataServices.getItems(
-			valueItemName,
-			valueSpinner,
-			valueSelector,
-			page,
-			storeName,
-		)
-			.then((res) => {
-				setItems(res.itemsList);
-
-				props.itemsRaw(res.itemsList);
-				props.watingResponse("");
-				setStateButtonSearch("");
-			})
-			.catch(() => {
-				setItems([]);
-				props.itemsRaw([]);
-				props.watingResponse("");
-				setStateButtonSearch("");
-			});
-	}, [props, valueItemName, valueSpinner, valueSelector, page, storeName]);
-
-	useEffect(() => {
-		if (props.pagePassed !== page) {
-			setPage(props.pagePassed);
-			submitSearch();
+	useLayoutEffect(() => {
+		if (storeNameList.length === 0) {
+			getValueStore();
 		}
-	}, [props.pagePassed, page, submitSearch]);
-
-	getValueStore();
+		if (props.statusResponse !== stateButtonSearch) {
+			setStateButtonSearch(props.statusResponse);
+		}
+	}, [props, props.statusResponse, stateButtonSearch, storeNameList.length]);
 
 	return (
 		<Form className="paddingSearchForm">
@@ -81,7 +59,9 @@ function SearchForm(props: any) {
 							type="text"
 							placeholder="Name"
 							id="itemName"
-							onChange={(value: any) => setValueItemName(value.target["value"])}
+							onChange={(value: any) =>
+								(valueItemName.current = value.target["value"])
+							}
 						/>
 					</Form.Group>
 				</Col>
@@ -92,8 +72,8 @@ function SearchForm(props: any) {
 						min={1}
 						max={99999}
 						step={1}
-						value={valueSpinner}
-						onChange={(num: any) => setValueSpinner(num)}
+						value={valueSpinner.current}
+						onChange={(num: any) => (valueSpinner.current = num)}
 						variant={"dark"}
 						size="sm"
 					/>
@@ -101,7 +81,9 @@ function SearchForm(props: any) {
 				<Col xs={3}>
 					<Form.Select
 						aria-label="Default select example"
-						onChange={(value: any) => setValueSelector(value.target["value"])}
+						onChange={(value: any) =>
+							(valueSelector.current = value.target["value"])
+						}
 					>
 						<option value="$eq"> {"="} </option>
 						<option value="$gt">{">"}</option>
@@ -113,7 +95,9 @@ function SearchForm(props: any) {
 				<Col xs="auto">
 					<Form.Select
 						className="mb-3"
-						onChange={(value: any) => setStoreName(value.target["value"])}
+						onChange={(value: any) =>
+							(storeName.current = value.target["value"])
+						}
 					>
 						<option value="">All</option>
 						{storeNameList.map((store: any, index: number) => (
@@ -131,7 +115,13 @@ function SearchForm(props: any) {
 							onClick={(e) => {
 								handleSubmit(e);
 								setStateButtonSearch("disabled");
-								submitSearch();
+								props.statusGet("disabled");
+								props.getForm(
+									valueItemName.current,
+									valueSpinner.current,
+									valueSelector.current,
+									storeName.current,
+								);
 							}}
 						>
 							Search

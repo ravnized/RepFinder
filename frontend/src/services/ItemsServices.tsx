@@ -24,7 +24,7 @@ class ItemsDataServices {
 		if (storeName !== "") {
 			finalUrl += `&storeName[0]=${storeName}&storeName[1]=$eq`;
 		}
-		console.log(finalUrl);
+		
 		let response = await fetch(finalUrl, {
 			method: "GET",
 			headers: {

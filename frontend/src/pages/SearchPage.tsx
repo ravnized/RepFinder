@@ -5,6 +5,77 @@ import SearchForm from "../components/SearchForm";
 import ButtonsForm from "../components/ButtonsForm";
 import "../css/SearchPage.css";
 import React from "react";
+import ItemsDataServices from "../services/ItemsServices";
+
+function SearchPage() {
+	const [items, setItems] = useState([]);
+	const [page, setPage] = useState(0);
+	const [status, setStatus] = useState("");
+
+	function pageValue(page: number) {
+		setPage(page);
+	}
+
+	function getForm(
+		itemName: string,
+		cost: number,
+		selectorOperation: string,
+		page: number,
+		storeName: string,
+	) {
+		ItemsDataServices.getItems(
+			itemName,
+			cost,
+			selectorOperation,
+			page,
+			storeName,
+		)
+			.then((res) => {
+				setItems(res.itemsList);
+				waitingResponse("");
+			})
+			.catch((e) => {
+				setItems([]);
+				waitingResponse("");
+			});
+	}
+
+	function waitingResponse(statusPass: string) {
+		if (statusPass === "" || statusPass === "disabled") {
+			setStatus(statusPass);
+		}
+	}
+
+	return (
+		<Container>
+			<SearchForm
+				getForm={(
+					itemName: string,
+					cost: number,
+					selectorOperation: string,
+					storeName: string,
+				) => getForm(itemName, cost, selectorOperation, page, storeName)}
+				statusGet={(status: string) => waitingResponse(status)}
+				statusResponse={status}
+			/>
+			{items !== undefined && items.length > 0 ? (
+				<ButtonsForm page={(page) => pageValue(page)} statusResponse={status} />
+			) : (
+				""
+			)}
+			<ItemsCard
+				responseValue={items}
+				statusResponse={(status: string) => waitingResponse(status)}
+			/>
+			{items !== undefined && items.length > 0 ? (
+				<ButtonsForm page={(page) => pageValue(page)} statusResponse={status} />
+			) : (
+				""
+			)}
+		</Container>
+	);
+}
+/*
 class SearchPage extends React.Component<
 	{},
 	{
@@ -65,5 +136,6 @@ class SearchPage extends React.Component<
 		);
 	}
 }
+*/
 
 export default SearchPage;

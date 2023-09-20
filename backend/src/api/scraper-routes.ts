@@ -15,6 +15,15 @@ router.route("/searchByID").get((req: any, res: any, next: any) => {
         error: "No id"
     })
 })
+router.route("/searchBy_ID").get((req: any, res: any, next: any) => {
+    ScraperController.getItemBy_Id(req.query._id).then((data: any) => {
+        return res.status(200).json(data);
+    }).catch((e: any) => {
+        return res.status(500).json(e);
+    }
+    );
+})
+
 router.route("/incrementOne").post((req: any, res: any, next: any) => {
     ScraperController.incrementPopularity(req.query.id).then(() => {
         return res.status(200).json({

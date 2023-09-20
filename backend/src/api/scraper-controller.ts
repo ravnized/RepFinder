@@ -602,6 +602,42 @@ export default class ScraperController {
         })
         return Promise.resolve(objectId);
     }
+
+    static async getItemBy_Id(_id: string): Promise<{
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number
+
+    }> {
+        let objectId: {
+            _id: string,
+            itemName: string,
+            cost: number,
+            idItem: string,
+            image: string,
+            storeName: string,
+            popularity: number
+        } = {
+            _id: "",
+            itemName: "",
+            cost: -1,
+            idItem: "",
+            image: "",
+            storeName: "",
+            popularity: 0
+        };
+
+        objectId = await ScraperDao.getItemBy_ID(_id).catch((e: any) => {
+            console.log(`getItemById ${e.error}`)
+            return Promise.reject(e)
+        })
+        return Promise.resolve(objectId);
+    }
+
     /**
      * 
      * @param itemId id of the item to increment
@@ -659,14 +695,14 @@ export default class ScraperController {
         console.log(reqQuery);
         let filters: any = {};
         let sortBy: {} = {};
-        
+
         if (reqQuery.cost) {
             filters.cost = [
                 Number(reqQuery.cost[0]),
                 reqQuery.cost[1]
             ]
-                
-            
+
+
         }
 
 
@@ -756,8 +792,17 @@ export default class ScraperController {
         let _id: string = req._id;
         let itemName: string = req.itemName;
         let cost: number = Number(req.itemCost);
-        let itemNameChanged: boolean = req.itemNameChanged;
-        let itemCostChanged: boolean = req.itemCostChanged;
+        let itemNameChanged: boolean = false;
+        let itemCostChanged: boolean = false;
+        await this.getItemBy_Id(_id).then(
+            async (res: any) => {
+                if(res.itemName !== itemName){
+                    itemNameChanged = true
+                }
+                if(res.cost !== cost){
+                    itemCostChanged = true
+                }
+            })
 
         response = await ScraperDao.updateItem(_id, itemName, itemNameChanged, cost, itemCostChanged).catch((e: any) => {
             return Promise.reject(e)
