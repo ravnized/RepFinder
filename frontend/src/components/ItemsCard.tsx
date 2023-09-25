@@ -12,7 +12,11 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import "../css/ItemCard.css";
 import ReportServices from "../services/ReportServices";
 
-function ItemsCard(props: any) {
+function ItemsCard(props: {
+	responseValue: never[];
+	statusResponse: string;
+	statusResponseGet: (response: string) => void;
+}) {
 	const [handle, setHandle] = React.useState(false);
 	const [idItem, setIdItem] = React.useState("");
 	const [itemName, setItemName] = React.useState("");
@@ -29,7 +33,24 @@ function ItemsCard(props: any) {
 		if (props.responseValue !== undefined) {
 			setItems(props.responseValue);
 		}
-	}, [props.responseValue]);
+		if (props.statusResponse === "out") {
+			items.map((item: any, index: number) => {
+				
+					tl.current.to(
+						`#cardEl${index}`,
+						{ opacity: 0, y: +100, duration: 0.5 },
+						`0.${index}`,
+					);
+				
+				if(index === items.length - 1) {
+					setTimeout(() => {
+						props.statusResponseGet("");
+					}, 500);
+				}
+			});
+			
+		}
+	}, [items, props, props.responseValue, props.statusResponse]);
 
 	return (
 		<>
@@ -47,7 +68,7 @@ function ItemsCard(props: any) {
 						type="hidden"
 						id="itemId"
 						value={idItem}
-						onChange={(e: any) => (setIdItem( e.target.value))}
+						onChange={(e: any) => setIdItem(e.target.value)}
 					/>
 					<Row>
 						<Col>
@@ -57,7 +78,7 @@ function ItemsCard(props: any) {
 							<input
 								id="itemName"
 								value={itemName}
-								onChange={(e: any) => (setItemName(  e.target.value))}
+								onChange={(e: any) => setItemName(e.target.value)}
 							/>
 						</Col>
 					</Row>
@@ -69,7 +90,7 @@ function ItemsCard(props: any) {
 							<input
 								id="itemCost"
 								value={itemCost}
-								onChange={(e: any) => (setItemCost(e.target.value))}
+								onChange={(e: any) => setItemCost(e.target.value)}
 							/>
 						</Col>
 					</Row>

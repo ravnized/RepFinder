@@ -420,16 +420,16 @@ export default class ScraperController {
                             itemsNonInseriti.push(item.idItem);
                         }
                     }).catch((e: any) => {
-                        console.log(`error in getItemsById items ${e}`)
+                        console.log(`error in getItemsById items ${e.error}`)
                         return Promise.reject(e);
                     })
                 })
             ).catch((e: any) => {
-                console.log(`error in promise items ${e}`)
+                console.log(`error in promise items ${e.error}`)
                 Promise.reject(e);
             })
         })).catch((e: any) => {
-            console.log(`error in promise filename ${e}`)
+            console.log(`error in promise filename ${e.error}`)
             return Promise.reject(e);
         })
 

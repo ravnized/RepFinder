@@ -8,7 +8,10 @@ import ScraperServices from "../services/PrivilegedServices";
 import useWebSocket from "react-use-websocket";
 import { Button, Col, Container, ProgressBar, Row } from "react-bootstrap";
 import "../css/Scraper.css";
-function Scraper(props: any) {
+function Scraper(props: {
+	token: string;
+	onStateChange: (message: string, error: string) => void;
+}) {
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
 	const [nInput, setNInput] = useState(1);
@@ -118,185 +121,135 @@ function Scraper(props: any) {
 	);
 }
 
-class Converter extends React.Component<
-	{ token: string; onStateChange: (error: string, message: string) => void },
-	{
-		message: string;
-		error: string;
-	}
-> {
-	constructor(props: any) {
-		super(props);
-		this.state = {
-			message: "",
-			error: "",
-		};
-	}
-
-	render(): React.ReactNode {
-		return (
-			<div>
-				<button
-					onClick={(e) => {
-						e.preventDefault();
-						ScraperServices.convertAll(this.props.token)
-							.then((resMessage: []) => {
-								let nItems;
-								let message;
-								if (resMessage.length === 0) {
-									message = "No files to convert";
-								} else {
-									nItems = resMessage.length;
-									message = `Converted ${nItems} items`;
-								}
-								this.setState({ message: message });
-								this.props.onStateChange("", message);
-							})
-							.catch((error) => {
-								this.setState({ error: error });
-								this.props.onStateChange(this.state.error, "");
-							});
-					}}
-				>
-					Convert All files
-				</button>
-			</div>
-		);
-	}
+function Converter(props: {
+	token: string;
+	onStateChange: (message: string, error: string) => void;
+}) {
+	return (
+		<div>
+			<Button
+				onClick={(e) => {
+					e.preventDefault();
+					ScraperServices.convertAll(props.token)
+						.then((resMessage: []) => {
+							let nItems;
+							let message;
+							if (resMessage.length === 0) {
+								message = "No files to convert";
+							} else {
+								nItems = resMessage.length;
+								message = `Converted ${nItems} items`;
+							}
+							props.onStateChange(message, "");
+						})
+						.catch((error) => {
+							props.onStateChange("", error);
+						});
+				}}
+			>
+				Convert All files
+			</Button>
+		</div>
+	);
 }
 
-class Updater extends React.Component<
-	{ token: string; onStateChange: (error: string, message: string) => void },
-	{
-		message: string;
-		error: string;
-		filesArray: [];
-		filesToUpdate: string[];
-	}
-> {
-	constructor(props: any) {
-		super(props);
-		this.state = {
-			message: "",
-			error: "",
-			filesArray: [],
-			filesToUpdate: [],
-		};
-	}
-	async getFiles() {
-		await ScraperServices.getFiles(this.props.token)
+function Updater(props: {
+	token: string;
+	onStateChange: (message: string, error: string) => void;
+}) {
+	const [filesArray, setFilesArray] = useState([]);
+	const [filesToUpdate, setFilesToUpdate] = useState([]);
+	const getFiles = useCallback(() => {
+		ScraperServices.getFiles(props.token)
 			.then((res: []) => {
-				this.setState({ filesArray: res });
+				setFilesArray(res);
 			})
 			.catch((error) => {
-				this.setState({ error: error });
-				this.props.onStateChange(this.state.error, "");
+				props.onStateChange("", error);
 			});
-	}
+	}, [props]);
 
-	render(): React.ReactNode {
-		return (
-			<div>
-				{this.state.filesArray.length === 0 ? (
-					<button
-						onClick={(e) => {
-							e.preventDefault();
-							this.getFiles();
-						}}
-					>
-						Get files
-					</button>
-				) : (
-					<div>
-						{this.state.filesArray.map((item: string, index: number) => (
-							<div key={index}>
-								<label htmlFor={item}>{item}</label>
-								<input
-									type="checkbox"
-									id={item}
-									onChange={(e) => {
-										let fileToUpdate: string[] = this.state.filesToUpdate;
-										if (e.target.checked) {
-											fileToUpdate.push(item);
-										} else {
-											fileToUpdate.splice(fileToUpdate.indexOf(item), 1);
-										}
-
-										this.setState({ filesToUpdate: fileToUpdate });
-									}}
-								/>
-							</div>
-						))}
-						<button
-							onClick={(e) => {
-								e.preventDefault();
-
-								ScraperServices.updateDatabase(
-									this.props.token,
-									this.state.filesToUpdate,
-								)
-									.then((res: any) => {
-										//console.log(res);
-										let resInseriti =
-											res.itemInseriti === undefined
-												? 0
-												: res.itemInseriti.length;
-										let message = `Updated ${resInseriti} items`;
-										this.setState({ message: message });
-										this.props.onStateChange("", message);
-									})
-									.catch((error) => {
-										this.setState({ error: error });
-										this.props.onStateChange(error, "");
-									});
-							}}
-						>
-							Update Items
-						</button>
-					</div>
-				)}
-			</div>
-		);
-	}
-}
-
-class DeleteAll extends React.Component<
-	{ token: string; onStateChange: (error: string, message: string) => void },
-	{
-		message: string;
-		error: string;
-	}
-> {
-	constructor(props: any) {
-		super(props);
-		this.state = {
-			message: "",
-			error: "",
-		};
-	}
-	render(): React.ReactNode {
-		return (
-			<div>
-				<button
+	return (
+		<div>
+			{filesArray.length === 0 ? (
+				<Button
 					onClick={(e) => {
 						e.preventDefault();
-						ScraperServices.deleteAll(this.props.token)
-							.then((res: any) => {
-								let message = res.message;
-								this.setState({ message: message });
-								this.props.onStateChange("", message);
-							})
-							.catch((error: any) => {
-								this.setState({ error: error });
-								this.props.onStateChange(error, "");
-							});
+						getFiles();
 					}}
 				>
-					Delete All
-				</button>
-			</div>
-		);
-	}
+					Get files
+				</Button>
+			) : (
+				<div>
+					{filesArray.map((item: string, index: number) => (
+						<div key={index}>
+							<label htmlFor={item}>{item}</label>
+							<input
+								type="checkbox"
+								id={item}
+								onChange={(e) => {
+									let fileToUpdate: any = filesToUpdate;
+									if (e.target.checked) {
+										fileToUpdate.push(item);
+									} else {
+										fileToUpdate.splice(fileToUpdate.indexOf(item), 1);
+									}
+									setFilesToUpdate(fileToUpdate);
+								}}
+							/>
+						</div>
+					))}
+					<Button
+						onClick={(e) => {
+							e.preventDefault();
+
+							ScraperServices.updateDatabase(props.token, filesToUpdate)
+								.then((res: any) => {
+									//console.log(res);
+									let resInseriti =
+										res.itemInseriti === undefined
+											? 0
+											: res.itemInseriti.length;
+									let message = `Updated ${resInseriti} items`;
+									props.onStateChange(message, "");
+								})
+								.catch((error) => {
+									props.onStateChange("", error);
+								});
+						}}
+					>
+						Update Items
+					</Button>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function DeleteAll(props: {
+	token: string;
+	onStateChange: (message: string, error: string) => void;
+}) {
+	return (
+		<div>
+			<Button
+				onClick={(e) => {
+					e.preventDefault();
+					ScraperServices.deleteAll(props.token)
+						.then((res: any) => {
+							let message = res.message;
+							props.onStateChange(message, "");
+						})
+						.catch((error: any) => {
+							props.onStateChange("", error);
+						});
+				}}
+			>
+				Delete All
+			</Button>
+		</div>
+	);
 }
 
 export { Scraper, Converter, Updater, DeleteAll };

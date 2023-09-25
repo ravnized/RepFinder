@@ -11,9 +11,20 @@ function SearchPage() {
 	const [items, setItems] = useState([]);
 	const [page, setPage] = useState(0);
 	const [status, setStatus] = useState("");
+	const [statusResponse, setStatusResponse] = useState("");
+	const [itemQuery, setItemQuery] = useState({
+		itemName: "",
+		cost: 0,
+		selectorOperation: "",
+		page: 0,
+		storeName: "",
+	});
 
 	function pageValue(page: number) {
 		setPage(page);
+		waitingResponse("disabled");
+		responseOutIn("out");
+		console.log("ritornato da buttonsForm");
 	}
 
 	function getForm(
@@ -33,10 +44,24 @@ function SearchPage() {
 			.then((res) => {
 				setItems(res.itemsList);
 				waitingResponse("");
+				setItemQuery({
+					itemName: itemName,
+					cost: cost,
+					selectorOperation: selectorOperation,
+					page: page,
+					storeName: storeName,
+				});
 			})
 			.catch((e) => {
 				setItems([]);
 				waitingResponse("");
+				setItemQuery({
+					itemName: itemName,
+					cost: cost,
+					selectorOperation: selectorOperation,
+					page: page,
+					storeName: storeName,
+				});
 			});
 	}
 
@@ -46,6 +71,21 @@ function SearchPage() {
 		}
 	}
 
+	function responseOutIn(statusPass: string) {
+		if (statusPass === "") {
+			console.log("ritornato da itemCard");
+			getForm(
+				itemQuery.itemName,
+				itemQuery.cost,
+				itemQuery.selectorOperation,
+				page,
+				itemQuery.storeName,
+			);
+			setStatusResponse(statusPass);
+		} else {
+			setStatusResponse(statusPass);
+		}
+	}
 	return (
 		<Container>
 			<SearchForm
@@ -65,7 +105,8 @@ function SearchPage() {
 			)}
 			<ItemsCard
 				responseValue={items}
-				statusResponse={(status: string) => waitingResponse(status)}
+				statusResponse={statusResponse}
+				statusResponseGet={(response) => responseOutIn(response)}
 			/>
 			{items !== undefined && items.length > 0 ? (
 				<ButtonsForm page={(page) => pageValue(page)} statusResponse={status} />
