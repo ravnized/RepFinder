@@ -1,11 +1,15 @@
 import React from "react";
-import {LoginDataServices} from "../services/UsersServices";
+import { LoginDataServices } from "../services/UsersServices";
 import { withCookies } from "react-cookie";
 import { Navigate } from "react-router-dom";
-
+import InputGroup from "react-bootstrap/InputGroup";
+import { Alert, Button, Container, Form, Row } from "react-bootstrap";
 //Class login page that comunicate with the main page to pass around the token
 
-class LoginPage extends React.Component<{ cookies: any }, {error: string, token: string}> {
+class LoginPage extends React.Component<
+	{ cookies: any },
+	{ error: string; token: string }
+> {
 	constructor(props: any) {
 		super(props);
 		const { cookies } = props;
@@ -39,49 +43,68 @@ class LoginPage extends React.Component<{ cookies: any }, {error: string, token:
 				console.log(e);
 			});
 	}
-
+	//Center the page and display the login form
 	render(): React.ReactNode {
 		let username: string = "";
 		let password: string = "";
 
 		return (
-			<div>
+			<>
 				{
 					//If there is an error display it
 					this.state.error !== "" ? (
-						<div>
-							<p>{this.state.error}</p>
-						</div>
+						<Container style={{ padding: "1rem" }}>
+							<Alert key="warning" variant="warning">
+								{this.state.error}
+							</Alert>
+						</Container>
 					) : (
 						<div></div>
 					)
 				}
-				<div>
-					<input
-						type="text"
-						placeholder="email"
-						id="email"
-						onChange={(event: any) => {
-							username = event.target.value;
-						}}
-					/>
-					<input
-						type="password"
-						placeholder="Password"
-						id="password"
-						onChange={(event: any) => {
-							password = event.target.value;
-						}}
-					/>
-					<button
-						onClick={() => {
-							this.login(username, password);
-						}}
-					>
-						Login
-					</button>
-				</div>
-			</div>
+				<Container
+					style={{
+						position: "absolute",
+						top: "50%",
+						left: "50%",
+						transform: "translate(-50%, -50%)",
+					}}
+				>
+					<Row>
+						<InputGroup className="mb-3">
+							<InputGroup.Text id="email">@</InputGroup.Text>
+							<Form.Control
+								placeholder="test@test.com"
+								aria-label="Email"
+								aria-describedby="basic-addon1"
+								onChange={(event: any) => {
+									username = event.target.value;
+								}}
+							/>
+						</InputGroup>
+
+						<InputGroup className="mb-3">
+							<InputGroup.Text id="password">**</InputGroup.Text>
+							<Form.Control
+								placeholder="test123!"
+								aria-label="password"
+								aria-describedby="basic-addon1"
+								onChange={(event: any) => {
+									password = event.target.value;
+								}}
+							/>
+						</InputGroup>
+
+						<Button
+							onClick={() => {
+								this.login(username, password);
+							}}
+						>
+							Login
+						</Button>
+					</Row>
+				</Container>
+			</>
 		);
 	}
 }
