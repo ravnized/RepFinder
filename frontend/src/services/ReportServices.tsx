@@ -1,6 +1,6 @@
 class ReportServices {
 	static async getAll(token: string) {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-reports/";
+		let baseUrl = `${process.env.URL_REPORTS_PRIVILEGED}`;
 		let req = await fetch(baseUrl, {
 			method: "GET",
 			headers: {
@@ -22,7 +22,7 @@ class ReportServices {
 		itemName: string,
 		needToBeDeleted: boolean,
 	) {
-		let baseUrl = "http://localhost:5001/api/v1/reports/insert";
+		let baseUrl = `${process.env.URL_REPORTS_PRIVILEGED}insert`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
@@ -43,7 +43,7 @@ class ReportServices {
 		return await req.json();
 	}
 	static async deleteReport(token: string, _id: string) {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-reports/delete";
+		let baseUrl = `${process.env.URL_REPORTS_PRIVILEGED}delete`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {

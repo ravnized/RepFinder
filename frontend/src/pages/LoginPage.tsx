@@ -2,8 +2,7 @@ import React from "react";
 import { LoginDataServices } from "../services/UsersServices";
 import { withCookies } from "react-cookie";
 import { Navigate } from "react-router-dom";
-import InputGroup from "react-bootstrap/InputGroup";
-import { Alert, Button, Container, Form, Row } from "react-bootstrap";
+import { Alert, Button, Container, Form } from "react-bootstrap";
 
 function LoginPage(props: any) {
 	let username: string = "";

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -34,7 +34,7 @@ function ItemsCard(props: {
 			setItems(props.responseValue);
 		}
 		if (props.statusResponse === "out") {
-			items.map((item: any, index: number) => {
+			items.map((item: any, index: number): void => {
 				
 					tl.current.to(
 						`#cardEl${index}`,

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import "../css/Homepage.css";
 import { Accordion, Col, Container, Row } from "react-bootstrap";

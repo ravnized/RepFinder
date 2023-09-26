@@ -1,6 +1,6 @@
 class LoginDataServices {
 	static async getToken(email: string, password: string) {
-		let baseUrl = "http://localhost:5001/api/v1/users/login";
+		let baseUrl = `${process.env.URL_USERS}login`;
 		console.log(email);
 
 		let response = await fetch(baseUrl, {
@@ -17,14 +17,14 @@ class LoginDataServices {
 		return await response.json();
 	}
 	static async verifyToken(token: string) {
-		let baseUrl = "http://localhost:5001/api/v1/users/verifyToken";
+		let baseUrl = `${process.env.URL_USERS}verifyToken`;
 
 		let response = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				"token": token,
-			}
+				token: token,
+			},
 		});
 
 		return await response.json();
@@ -37,8 +37,7 @@ class RegisterDataServices {
 		name: string,
 		lastName: string,
 	) {
-		let baseUrl = "http://localhost:5001/api/v1/users/register";
-		console.log(email);
+		let baseUrl = `${process.env.URL_USERS}register`;
 
 		let response = await fetch(baseUrl, {
 			method: "POST",

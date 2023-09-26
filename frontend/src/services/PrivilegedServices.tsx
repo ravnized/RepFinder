@@ -3,7 +3,7 @@ class ScraperServices {
 		arrayLinkFilename: { filename: string; url: string }[],
 		token: string,
 	) {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/scraperMulti";
+		let baseUrl = `${process.env.URL_PRIVILIGED}scraperMulti`;
 
 		let req = await fetch(baseUrl, {
 			method: "POST",
@@ -22,7 +22,7 @@ class ScraperServices {
 	}
 
 	static async convertAll(token: string): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/converter";
+		let baseUrl = `${process.env.URL_PRIVILIGED}converter`;
 
 		let req = await fetch(baseUrl, {
 			method: "POST",
@@ -38,7 +38,7 @@ class ScraperServices {
 		return Promise.resolve(await req.json());
 	}
 	static async getFiles(token: string): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/getFiles";
+		let baseUrl = `${process.env.URL_PRIVILIGED}getFiles`;
 
 		let req = await fetch(baseUrl, {
 			method: "GET",
@@ -54,7 +54,7 @@ class ScraperServices {
 		return Promise.resolve(await req.json());
 	}
 	static async updateDatabase(token: string, filename: string[]): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/updateItems";
+		let baseUrl = `${process.env.URL_PRIVILIGED}updateItems`;
 
 		let req = await fetch(baseUrl, {
 			method: "POST",
@@ -73,7 +73,7 @@ class ScraperServices {
 		return Promise.resolve(await req.json());
 	}
 	static async deleteAll(token: string): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/deleteAll";
+		let baseUrl = `${process.env.URL_PRIVILIGED}deleteAll`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
@@ -93,7 +93,7 @@ class ScraperServices {
 		itemId: string,
 	): Promise<[]> {
 		let baseUrl =
-			"http://localhost:5001/api/v1/privileged-routes/blacklistItem";
+			`${process.env.URL_PRIVILIGED}blacklistItem`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
@@ -119,7 +119,7 @@ class ScraperServices {
 		itemCost: number,
 		itemCostChanged: boolean,
 	): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/update";
+		let baseUrl = `${process.env.URL_PRIVILIGED}update`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
@@ -140,7 +140,7 @@ class ScraperServices {
 		return Promise.resolve(await req.json());
 	}
 	static async clearCache(token: string): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/clearCache";
+		let baseUrl = `${process.env.URL_PRIVILIGED}clearCache`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {

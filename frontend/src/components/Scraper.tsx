@@ -1,25 +1,17 @@
-import React, {
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import ScraperServices from "../services/PrivilegedServices";
 import useWebSocket from "react-use-websocket";
-import { Button, Col, Container, ProgressBar, Row } from "react-bootstrap";
+import { Button, Col, ProgressBar, Row } from "react-bootstrap";
 import "../css/Scraper.css";
 function Scraper(props: {
 	token: string;
 	onStateChange: (message: string, error: string) => void;
 }) {
-	const [message, setMessage] = useState("");
-	const [error, setError] = useState("");
 	const [nInput, setNInput] = useState(1);
 	const [inputArray, setInputArray] = useState([{ filename: "", url: "" }]);
 	const [progressObject, setProgressObject] = useState([]);
-	const [socketUrl, setSocketUrl] = useState(
-		"ws://localhost:5001/scraperMultiWs",
-	);
+	const socketUrl = "ws://localhost:5001/scraperMultiWs";
+
 	//const [messageHistory, setMessageHistory] = useState([]);
 	const { sendJsonMessage, lastJsonMessage } = useWebSocket(socketUrl);
 	const last_json_message: any = lastJsonMessage;
@@ -31,13 +23,10 @@ function Scraper(props: {
 		if (last_json_message !== null) {
 			let filename = last_json_message.filename;
 			let progress = last_json_message.percent;
-			console.log(`Filename: ${filename} Progress: ${progress}`);
 			let arrayProgress: any = progressObject;
 			arrayProgress[filename] = progress;
 			setProgressObject(arrayProgress);
-			console.log(last_json_message);
 			if (progress === 100) {
-				console.log("finito");
 				props.onStateChange("Scraping completed", "");
 			}
 		}
@@ -77,7 +66,8 @@ function Scraper(props: {
 					progress_object[inputArray[i].filename] === undefined ? (
 						<></>
 					) : (
-						<ProgressBar style={{padding: 0}}
+						<ProgressBar
+							style={{ padding: 0 }}
 							now={progress_object[inputArray[i].filename]}
 							label={`${progress_object[inputArray[i].filename]}%`}
 						/>
