@@ -4,108 +4,89 @@ import { withCookies } from "react-cookie";
 import { Navigate } from "react-router-dom";
 import InputGroup from "react-bootstrap/InputGroup";
 import { Alert, Button, Container, Form, Row } from "react-bootstrap";
-//Class login page that comunicate with the main page to pass around the token
 
-class LoginPage extends React.Component<
-	{ cookies: any },
-	{ error: string; token: string }
-> {
-	constructor(props: any) {
-		super(props);
-		const { cookies } = props;
-		this.state = {
-			error: "",
-			token: cookies.get("token") || "",
-		};
+function LoginPage(props: any) {
+	let username: string = "";
+	let password: string = "";
+	const [error, setError] = React.useState("");
+	const [show, setShow] = React.useState(true);
+
+	const { cookies } = props;
+	if (cookies.get("token") !== undefined) {
+		return <Navigate to="/" />;
 	}
-
-	handleTokenChange(token: string) {
-		const { cookies } = this.props;
+	function handleTokenChange(token: string) {
 		cookies.set("token", token, { path: "/" });
-		this.setState({ token });
 		//window.location.href = "/";
 	}
-
-	async login(email: string, password: string) {
-		LoginDataServices.getToken(email, password)
-			.then(async (res) => {
-				//console.log(res);
-				if (res.error !== undefined) {
-					this.setState({ error: res.error });
-					//console.log("error");
-				} else {
-					this.handleTokenChange(res.token);
-					this.setState({ error: "" });
-					window.location.href = "/";
-				}
-			})
-			.catch((e) => {
-				console.log(e);
-			});
+	async function login(email: string, password: string) {
+		LoginDataServices.getToken(email, password).then(async (res) => {
+			if (res.error !== undefined) {
+				setError(res.error);
+			} else {
+				handleTokenChange(res.token);
+				setError("");
+				window.location.href = "/";
+			}
+		});
 	}
-	//Center the page and display the login form
-	render(): React.ReactNode {
-		let username: string = "";
-		let password: string = "";
-
-		return (
-			<>
-				{
-					//If there is an error display it
-					this.state.error !== "" ? (
-						<Container style={{ padding: "1rem" }}>
-							<Alert key="warning" variant="warning">
-								{this.state.error}
-							</Alert>
-						</Container>
-					) : (
-						<div></div>
-					)
-				}
-				<Container
-					style={{
-						position: "absolute",
-						top: "50%",
-						left: "50%",
-						transform: "translate(-50%, -50%)",
-					}}
-				>
-					<Row>
-						<InputGroup className="mb-3">
-							<InputGroup.Text id="email">@</InputGroup.Text>
-							<Form.Control
-								placeholder="test@test.com"
-								aria-label="Email"
-								aria-describedby="basic-addon1"
-								onChange={(event: any) => {
-									username = event.target.value;
-								}}
-							/>
-						</InputGroup>
-
-						<InputGroup className="mb-3">
-							<InputGroup.Text id="password">**</InputGroup.Text>
-							<Form.Control
-								placeholder="test123!"
-								aria-label="password"
-								aria-describedby="basic-addon1"
-								onChange={(event: any) => {
-									password = event.target.value;
-								}}
-							/>
-						</InputGroup>
-
-						<Button
-							onClick={() => {
-								this.login(username, password);
-							}}
-						>
-							Login
-						</Button>
-					</Row>
+	return (
+		<>
+			{error !== "" && show ? (
+				<Container style={{ padding: "1rem" }}>
+					<Alert
+						key="warning"
+						variant="warning"
+						onClose={() => setShow(false)}
+						dismissible
+					>
+						{error}
+					</Alert>
 				</Container>
-			</>
-		);
-	}
+			) : (
+				<></>
+			)}
+
+			<Container className="RegisterForm">
+				<Form>
+					<Form.Group className="mb-3">
+						<Form.Label className="white-text">Email address</Form.Label>
+						<Form.Control
+							placeholder="test@test.com"
+							aria-label="Email"
+							className="input-dark"
+							aria-describedby="basic-addon1"
+							onChange={(event: any) => {
+								username = event.target.value;
+							}}
+						/>
+					</Form.Group>
+					<Form.Group>
+						<Form.Label className="white-text">Password</Form.Label>
+						<Form.Control
+							placeholder="test123!"
+							aria-label="password"
+							className="input-dark"
+							aria-describedby="basic-addon1"
+							onChange={(event: any) => {
+								password = event.target.value;
+							}}
+						/>
+					</Form.Group>
+
+					<Button
+						className="white-text"
+						style={{ margin: "1rem" }}
+						onClick={() => {
+							login(username, password);
+						}}
+					>
+						Login
+					</Button>
+				</Form>
+			</Container>
+		</>
+	);
 }
+
 export default withCookies(LoginPage);

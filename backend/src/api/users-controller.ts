@@ -79,7 +79,7 @@ export default class UsersController {
             return Promise.resolve(response);
         }).catch((error) => {
             return Promise.reject({
-                error: `Error in creating user: ${error}`
+                error: `Error in creating user: ${error.error}`
             });
         });
 

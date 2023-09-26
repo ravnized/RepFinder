@@ -1,24 +1,30 @@
-import React from "react";
-import {RegisterDataServices} from "../services/UsersServices";
-class RegisterPage extends React.Component<
-	{},
-	{ message: string; error: string }
-> {
-	constructor(props: any) {
-		super(props);
-		this.state = {
-			message: "",
-			error: "",
-		};
-	}
+import React, { useState } from "react";
+import { RegisterDataServices } from "../services/UsersServices";
+import { Container, Row, Form, Col, Button, Alert } from "react-bootstrap";
+import "../css/Register.css";
 
-	register(email: string, password: string, name: string, lastName: string) {
+function RegisterPage(props: any) {
+	let [message, setMessage] = React.useState("");
+	let [error, setError] = React.useState("");
+	let [email, setEmail] = React.useState("");
+	let [password, setPassword] = React.useState("");
+	let [name, setName] = React.useState("");
+	let [lastName, setLastName] = React.useState("");
+	let [passwordConfirm, setPasswordConfirm] = React.useState("");
+	const [show, setShow] = useState(true);
+	function register(
+		email: string,
+		password: string,
+		name: string,
+		lastName: string,
+	) {
 		RegisterDataServices.registerData(email, password, name, lastName)
 			.then(async (res) => {
-				if (res.error !== undefined) {
-					this.setState({ error: res.error });
+				console.log(res);
+				if (res.error === undefined) {
+					setMessage(res.message.substring(0, 50) + "...");
 				} else {
-					this.setState({ message: res.message });
+					setError("Error in Creating User");
 				}
 			})
 			.catch((e) => {
@@ -26,66 +32,163 @@ class RegisterPage extends React.Component<
 			});
 	}
 
-	render(): React.ReactNode {
-		let email: string = "";
-		let password: string = "";
-		let name: string = "";
-		let lastName: string = "";
-		return (
-			<div>
-				{
-					//If there is an error display it
-					this.state.message !== "" ? (
-						<div>
-							<p>{this.state.message}</p>
-						</div>
-					) : (
-						<div></div>
-					)
-				}
-				<div>
-					<input
-						type="text"
-						placeholder="email"
-						id="email"
-						onChange={(event: any) => {
-							email = event.target.value;
-						}}
-					/>
-					<input
-						type="text"
-						placeholder="password"
-						id="password"
-						onChange={(event: any) => {
-							password = event.target.value;
-						}}
-					/>
-					<input
-						type="text"
-						placeholder="name"
-						id="name"
-						onChange={(event: any) => {
-							name = event.target.value;
-						}}
-					/>
-					<input
-						type="text"
-						placeholder="lastName"
-						id="lastName"
-						onChange={(event: any) => {
-							lastName = event.target.value;
-						}}
-					/>
-					<button
-						onClick={() => {
-							this.register(email, password, name, lastName);
-						}}
-					>
-						Registrati
-					</button>
-				</div>
-			</div>
-		);
+	function checkPassword(password: string, passwordConfirm: string) {
+		if (password !== passwordConfirm) {
+			setError("Passwords don't match");
+			return false;
+		}
+
+		if (password.length < 8) {
+			setError("Password must be at least 8 characters long");
+			return false;
+		}
+
+		if (password.length > 20) {
+			setError("Password must be less than 20 characters long");
+			return false;
+		}
+
+		if (password.search(/[a-z]/i) < 0) {
+			setError("Password must contain at least one letter");
+			return false;
+		}
+
+		if (password.search(/[0-9]/) < 0) {
+			setError("Password must contain at least one number");
+			return false;
+		}
+
+		if (password.search(/[!@#$%^&*]/) < 0) {
+			setError("Password must contain at least one special character");
+			return false;
+		}
+
+		if (password.search(/[A-Z]/) < 0) {
+			setError("Password must contain at least one uppercase letter");
+			return false;
+		}
+
+		setError("");
+		return true;
 	}
+
+	return (
+		<>
+			{error !== "" && show ? (
+				<Container style={{ padding: "1rem" }}>
+					<Alert
+						key="warning"
+						variant="warning"
+						onClose={() => setShow(false)}
+						dismissible
+					>
+						{error}
+					</Alert>
+				</Container>
+			) : (
+				<></>
+			)}
+
+			{message !== "" && show ? (
+				<Container style={{ padding: "1rem" }}>
+					<Alert
+						key="info"
+						variant="info"
+						onClose={() => setShow(false)}
+						dismissible
+					>
+						{message}
+					</Alert>
+				</Container>
+			) : (
+				<></>
+			)}
+
+			<Container className="RegisterForm">
+				<Form>
+					<Form.Group className="mb-3">
+						<Form.Label className="white-text">Email address</Form.Label>
+						<Form.Control
+							placeholder="test@test.com"
+							aria-label="Email"
+							className="input-dark"
+							aria-describedby="basic-addon1"
+							onChange={(event: any) => {
+								setEmail(event.target.value);
+							}}
+						/>
+					</Form.Group>
+
+					<Form.Group className="mb-3">
+						<Form.Label className="white-text">Password</Form.Label>
+						<Form.Control
+							placeholder="test123"
+							aria-label="password"
+							className="input-dark"
+							aria-describedby="basic-addon1"
+							onChange={(event: any) => {
+								setPassword(event.target.value);
+							}}
+						/>
+					</Form.Group>
+					<Form.Group className="mb-3">
+						<Form.Label className="white-text">Confirm Password</Form.Label>
+						<Form.Control
+							placeholder="test123"
+							aria-label="password"
+							className="input-dark"
+							aria-describedby="basic-addon1"
+							onChange={(event: any) => {
+								setPasswordConfirm(event.target.value);
+							}}
+						/>
+					</Form.Group>
+					<Row style={{ padding: "1rem 0 1rem 0" }}>
+						<Col>
+							<Form.Group>
+								<Form.Label className="white-text">Name</Form.Label>
+								<Form.Control
+									placeholder="Mario"
+									aria-label="Name"
+									className="input-dark"
+									aria-describedby="basic-addon1"
+									onChange={(event: any) => {
+										setName(event.target.value);
+									}}
+								/>
+							</Form.Group>
+						</Col>
+						<Col>
+							<Form.Group>
+								<Form.Label className="white-text">Last Name</Form.Label>
+								<Form.Control
+									placeholder="Rossi"
+									aria-label="Last Name"
+									className="input-dark"
+									aria-describedby="basic-addon1"
+									onChange={(event: any) => {
+										setLastName(event.target.value);
+									}}
+								/>
+							</Form.Group>
+						</Col>
+					</Row>
+				</Form>
+				<Button
+					className="white-text"
+					style={{ margin: "1rem" }}
+					onClick={(e: any) => {
+						e.preventDefault();
+						setShow(true);
+						if (checkPassword(password, passwordConfirm)) {
+							register(email, password, name, lastName);
+						}
+					}}
+				>
+					Register
+				</Button>
+			</Container>
+		</>
+	);
 }
 export default RegisterPage;
