@@ -19,9 +19,11 @@ export default class ScraperDao {
         try {
             items = await conn.db("Main").collection("Items")
             await conn.db("Main").collection("Items").createIndex({
-                idItem: "text"
+                idItem: 1,
             }, { unique: true });
-
+            await conn.db("Main").collection("Items").createIndex({
+                itemName: "text",
+            });
         } catch (e) {
             return Promise.reject(e)
         }

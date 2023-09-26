@@ -53,6 +53,7 @@ function LoginPage(props: any) {
 						<Form.Control
 							placeholder="test@test.com"
 							aria-label="Email"
+							type="email"
 							className="input-dark"
 							aria-describedby="basic-addon1"
 							onChange={(event: any) => {
@@ -65,6 +66,7 @@ function LoginPage(props: any) {
 						<Form.Control
 							placeholder="test123!"
 							aria-label="password"
+							type="password"
 							className="input-dark"
 							aria-describedby="basic-addon1"
 							onChange={(event: any) => {

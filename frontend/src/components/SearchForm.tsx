@@ -23,11 +23,9 @@ function SearchForm(props: any) {
 		let storenameList: any = [];
 		ItemsDataServices.getStoreNames()
 			.then((res: []) => {
-				console.log(res);
-
+				
 				for (let i = 0; i < res.length; i++) {
 					let resi: any = res[i];
-					console.log(resi._id);
 					storenameList.push(resi._id);
 				}
 			})

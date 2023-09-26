@@ -704,12 +704,6 @@ export default class ScraperController {
 
 
         }
-
-
-
-        if (reqQuery.itemName) {
-            filters.itemName = reqQuery.itemName;
-        }
         if (reqQuery.storeName) {
             filters.storeName = reqQuery.storeName;
         }
@@ -723,7 +717,6 @@ export default class ScraperController {
         filters.blackList = [
             true, "$ne"
         ]
-
 
 
         responseItems = await ScraperDao.getItems({

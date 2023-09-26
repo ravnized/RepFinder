@@ -98,7 +98,9 @@ function SearchPage() {
 				statusResponse={status}
 			/>
 			{items !== undefined && items.length > 0 ? (
-				<ButtonsForm page={(page) => pageValue(page)} statusResponse={status} />
+				<ButtonsForm
+					statusResponse={status}
+				/>
 			) : (
 				""
 			)}
@@ -108,7 +110,11 @@ function SearchPage() {
 				statusResponseGet={(response) => responseOutIn(response)}
 			/>
 			{items !== undefined && items.length > 0 ? (
-				<ButtonsForm page={(page) => pageValue(page)} statusResponse={status} />
+				<ButtonsForm
+					page={(page) => pageValue(page)}
+					statusResponse={status}
+					pagePassed={page}
+				/>
 			) : (
 				""
 			)}

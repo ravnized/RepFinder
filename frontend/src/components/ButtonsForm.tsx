@@ -7,9 +7,16 @@ import "../css/ButtonsForm.css";
 function ButtonsForm(props: {
 	page: (page: number) => void;
 	statusResponse: string;
+	pagePassed: number;
 }) {
-	const [page, setPage] = useState(0);
+	let page: number = 0;
 
+	useEffect(() => {
+		if (props.pagePassed !== page) {
+			console.log("entrato");
+			page = props.pagePassed;
+		}
+	}, [props, props.pagePassed, page]);
 	return (
 		<div className="buttons-bot paddingButton">
 			<Row>
@@ -20,7 +27,6 @@ function ButtonsForm(props: {
 						onClick={(e) => {
 							if (page > 0) {
 								props.page(page - 1);
-								setPage(page - 1);
 							}
 						}}
 					>
@@ -33,7 +39,6 @@ function ButtonsForm(props: {
 						disabled={props.statusResponse === "Wait" ? true : false}
 						onClick={(e) => {
 							props.page(page + 1);
-							setPage(page + 1);
 						}}
 					>
 						Next page

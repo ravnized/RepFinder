@@ -1,6 +1,7 @@
+import env from "react-dotenv";
 class ReportServices {
 	static async getAll(token: string) {
-		let baseUrl = `${process.env.URL_REPORTS_PRIVILEGED}`;
+		let baseUrl = `${env.URL_REPORTS_PRIVILEGED}`;
 		let req = await fetch(baseUrl, {
 			method: "GET",
 			headers: {
@@ -22,7 +23,7 @@ class ReportServices {
 		itemName: string,
 		needToBeDeleted: boolean,
 	) {
-		let baseUrl = `${process.env.URL_REPORTS_PRIVILEGED}insert`;
+		let baseUrl = `${env.URL_REPORTS_PRIVILEGED}insert`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
@@ -43,7 +44,7 @@ class ReportServices {
 		return await req.json();
 	}
 	static async deleteReport(token: string, _id: string) {
-		let baseUrl = `${process.env.URL_REPORTS_PRIVILEGED}delete`;
+		let baseUrl = `${env.URL_REPORTS_PRIVILEGED}delete`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {

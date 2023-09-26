@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
@@ -13,6 +12,7 @@ import LoginRoute from "./components/LoginRoute";
 import RegisterPage from "./pages/RegisterPage";
 import DashBoard from "./pages/DashBoard";
 import Logout from "./pages/Logout";
+
 const router = createBrowserRouter([
 	{
 		path: "/",

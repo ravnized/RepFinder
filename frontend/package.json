@@ -24,6 +24,7 @@
 		"react-bootstrap-input-spinner": "^1.0.2",
 		"react-cookie": "^6.1.1",
 		"react-dom": "^18.2.0",
+		"react-dotenv": "^0.1.3",
 		"react-icons": "^4.11.0",
 		"react-router-dom": "^6.4.3",
 		"react-scripts": "5.0.1",
@@ -33,8 +34,8 @@
 		"web-vitals": "^2.1.4"
 	},
 	"scripts": {
-		"start": "react-scripts start",
-		"build": "react-scripts build",
+		"start": "react-dotenv && react-scripts start",
+		"build": "react-dotenv && react-scripts build",
 		"test": "react-scripts test",
 		"eject": "react-scripts eject"
 	},
@@ -54,6 +55,14 @@
 			"last 1 chrome version",
 			"last 1 firefox version",
 			"last 1 safari version"
+		]
+	},
+	"react-dotenv": {
+		"whitelist": [
+			"URL_ITEMS",
+			"URL_PRIVILIGED",
+			"URL_REPORTS_PRIVILEGED",
+			"URL_USERS"
 		]
 	}
 }
