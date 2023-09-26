@@ -114,6 +114,7 @@ function SearchForm(props: any) {
 									valueSelector.current,
 									storeName.current,
 								);
+								props.resetPage(true);
 							}}
 						>
 							Search

@@ -23,7 +23,6 @@ function SearchPage() {
 		setPage(page);
 		waitingResponse("disabled");
 		responseOutIn("out");
-		console.log("ritornato da buttonsForm");
 	}
 
 	function getForm(
@@ -85,6 +84,9 @@ function SearchPage() {
 			setStatusResponse(statusPass);
 		}
 	}
+	function resetPage(activated: boolean) {
+		if (activated) setPage(0);
+	}
 	return (
 		<Container>
 			<SearchForm
@@ -93,13 +95,16 @@ function SearchPage() {
 					cost: number,
 					selectorOperation: string,
 					storeName: string,
-				) => getForm(itemName, cost, selectorOperation, page, storeName)}
+				) => getForm(itemName, cost, selectorOperation, 0, storeName)}
 				statusGet={(status: string) => waitingResponse(status)}
 				statusResponse={status}
+				resetPage={(activated: boolean) => resetPage(activated)}
 			/>
 			{items !== undefined && items.length > 0 ? (
 				<ButtonsForm
 					statusResponse={status}
+					page={(page) => pageValue(page)}
+					pagePassed={page}
 				/>
 			) : (
 				""
