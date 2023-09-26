@@ -92,7 +92,8 @@ class ScraperServices {
 		_id: string,
 		itemId: string,
 	): Promise<[]> {
-		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/blacklistItem";
+		let baseUrl =
+			"http://localhost:5001/api/v1/privileged-routes/blacklistItem";
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
@@ -110,8 +111,14 @@ class ScraperServices {
 		return Promise.resolve(await req.json());
 	}
 
-	static async updateItem(token: string, _id: string, itemName: string, itemNameChanged: boolean, itemCost: number, itemCostChanged: boolean): Promise<[]> {
-	
+	static async updateItem(
+		token: string,
+		_id: string,
+		itemName: string,
+		itemNameChanged: boolean,
+		itemCost: number,
+		itemCostChanged: boolean,
+	): Promise<[]> {
 		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/update";
 		let req = await fetch(baseUrl, {
 			method: "POST",
@@ -125,13 +132,26 @@ class ScraperServices {
 				itemName: itemName,
 				itemNameChanged: itemNameChanged,
 				itemCost: itemCost,
-				itemCostChanged: itemCostChanged
+				itemCostChanged: itemCostChanged,
 			}),
 		}).catch((error) => {
 			return Promise.reject([error]);
 		});
 		return Promise.resolve(await req.json());
-	
+	}
+	static async clearCache(token: string): Promise<[]> {
+		let baseUrl = "http://localhost:5001/api/v1/privileged-routes/clearCache";
+		let req = await fetch(baseUrl, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				token: token,
+				"User-agent": "RepFinder-Frontend/1.0.0",
+			},
+		}).catch((error) => {
+			return Promise.reject([error]);
+		});
+		return Promise.resolve(await req.json());
 	}
 }
 

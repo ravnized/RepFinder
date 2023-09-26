@@ -1,10 +1,23 @@
-.navBarLink{
-    color: #fff;
-    font-size: 1.2rem;
-    font-weight: 500;
-    text-decoration: none;
-    margin: 0 1rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    transition: all 0.2s ease-in;
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@700&family=Roboto&display=swap");
+.navBarLink {
+	color: #fff;
+	font-size: 1.2rem;
+	font-weight: 500;
+	text-decoration: none;
+	margin: 0 1rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.25rem;
+	transition: all 0.2s ease-in;
+}
+
+.repFinderBrand {
+	font-family: "Raleway", sans-serif;
+	color: white;
+	text-decoration: none;
+}
+.repFinderLink {
+	text-decoration: none;
+}
+.navCustom > a {
+	font-family: "Raleway", sans-serif;
 }

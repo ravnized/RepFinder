@@ -87,6 +87,15 @@ router.route("/blacklistItem").post((req: any, res: any) => {
     });
 });
 
+router.route("/clearCache").post((req: any, res: any) => {
+
+    ScraperController.clearCache().then((result: any) => {
+        return res.status(200).json(result);
+    }).catch((err: any) => {
+        return res.status(500).json(err);
+    });
+});
+
 
 
 export default router;

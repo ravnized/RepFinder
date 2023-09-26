@@ -1,17 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { Scraper, Converter, Updater, DeleteAll } from "../components/Scraper";
+import { useState } from "react";
+import {
+	Scraper,
+	Converter,
+	Updater,
+	DeleteAll,
+	ClearCache,
+} from "../components/Scraper";
 import { useCookies } from "react-cookie";
 import { AllReport } from "../components/Reports";
-import { Container, Tab, Tabs, Toast, ToastContainer } from "react-bootstrap";
+import {
+	Container,
+	Row,
+	Tab,
+	Tabs,
+	Toast,
+	ToastContainer,
+} from "react-bootstrap";
 
 function DashBoard(props: any) {
-	const [cookies, setCookie] = useCookies(["token"]);
+	const [cookies] = useCookies(["token"]);
 	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
 	const [showA, setShowA] = useState(false);
 	const toggleShowA = () => {
 		setShowA(!showA);
-		if(showA) setMessage("");
+		if (showA) setMessage("");
 	};
 	const handleConvertState = (messagePass: string, errorPass: string) => {
 		if (message !== messagePass) {
@@ -22,7 +35,7 @@ function DashBoard(props: any) {
 			setError(error);
 		}
 	};
-	
+
 	return (
 		<>
 			<ToastContainer position="bottom-end" style={{ zIndex: 1 }}>
@@ -32,7 +45,7 @@ function DashBoard(props: any) {
 				</Toast>
 			</ToastContainer>
 
-			<Container>
+			<Container style={{ padding: "1rem" }}>
 				<Tabs
 					defaultActiveKey="reports"
 					id="uncontrolled-tab-example"
@@ -46,20 +59,41 @@ function DashBoard(props: any) {
 						/>
 					</Tab>
 					<Tab eventKey="scraper" title="Scraper">
-						<h3>Scrape File</h3>
-						<Scraper token={cookies.token} onStateChange={handleConvertState} />
-						<h3>Convert Files</h3>
-						<Converter
-							token={cookies.token}
-							onStateChange={handleConvertState}
-						/>
-						<h3>Update Database</h3>
-						<Updater token={cookies.token} onStateChange={handleConvertState} />
-						<h3>Delete All</h3>
-						<DeleteAll
-							token={cookies.token}
-							onStateChange={handleConvertState}
-						/>
+						<Row>
+							<h3>Scrape File</h3>
+							<Scraper
+								token={cookies.token}
+								onStateChange={handleConvertState}
+							/>
+						</Row>
+						<Row>
+							<h3>Convert Files</h3>
+							<Converter
+								token={cookies.token}
+								onStateChange={handleConvertState}
+							/>
+						</Row>
+						<Row>
+							<h3>Clear Cache</h3>
+							<ClearCache
+								token={cookies.token}
+								onStateChange={handleConvertState}
+							/>
+						</Row>
+						<Row>
+							<h3>Update Database</h3>
+							<Updater
+								token={cookies.token}
+								onStateChange={handleConvertState}
+							/>
+						</Row>
+						<Row>
+							<h3>Delete All</h3>
+							<DeleteAll
+								token={cookies.token}
+								onStateChange={handleConvertState}
+							/>
+						</Row>
 					</Tab>
 				</Tabs>
 			</Container>

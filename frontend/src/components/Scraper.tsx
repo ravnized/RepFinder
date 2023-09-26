@@ -77,7 +77,7 @@ function Scraper(props: {
 					progress_object[inputArray[i].filename] === undefined ? (
 						<></>
 					) : (
-						<ProgressBar
+						<ProgressBar style={{padding: 0}}
 							now={progress_object[inputArray[i].filename]}
 							label={`${progress_object[inputArray[i].filename]}%`}
 						/>
@@ -252,4 +252,29 @@ function DeleteAll(props: {
 	);
 }
 
-export { Scraper, Converter, Updater, DeleteAll };
+function ClearCache(props: {
+	token: string;
+	onStateChange: (message: string, error: string) => void;
+}) {
+	return (
+		<div>
+			<Button
+				onClick={(e) => {
+					e.preventDefault();
+					ScraperServices.clearCache(props.token)
+						.then((res: any) => {
+							let message = res.message;
+							props.onStateChange(message, "");
+						})
+						.catch((error: any) => {
+							props.onStateChange("", error);
+						});
+				}}
+			>
+				Clear Cache
+			</Button>
+		</div>
+	);
+}
+
+export { Scraper, Converter, Updater, DeleteAll, ClearCache };

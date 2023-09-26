@@ -796,10 +796,10 @@ export default class ScraperController {
         let itemCostChanged: boolean = false;
         await this.getItemBy_Id(_id).then(
             async (res: any) => {
-                if(res.itemName !== itemName){
+                if (res.itemName !== itemName) {
                     itemNameChanged = true
                 }
-                if(res.cost !== cost){
+                if (res.cost !== cost) {
                     itemCostChanged = true
                 }
             })
@@ -854,5 +854,30 @@ export default class ScraperController {
         })
         return Promise.resolve(response);
     }
+
+    static async clearCache(): Promise<{}> {
+        //remove cache folder
+        if (fs.existsSync(`${process.cwd()}/cache/stores`)) {
+            fs.rm(`${process.cwd()}/cache/stores`, { recursive: true }, (err: any) => {
+                if (err) {
+                    return Promise.reject(err);
+                }
+            })
+        }
+        fs.readdirSync(`${process.cwd()}/cache`).forEach((file: string) => {
+            if (file.includes(".json")) {
+                fs.rm(`${process.cwd()}/cache/${file}`, {}, (err: any) => {
+                    if (err) {
+                        return Promise.reject(err);
+                    }
+                })
+            }
+        })
+        return Promise.resolve({
+            message: "Cache cleared"
+        })
+
+    }
+
 
 }
