@@ -15,6 +15,8 @@ import reportRoutes from "./api/report-routes";
 import ReportDao from "./dao/reportDao";
 import ScraperController from "./api/scraper-controller";
 import UsersController from "./api/users-controller";
+import favoriteRoutes from "./api/favorites-routes";
+import FavoritesDao from "./dao/favoritesDao";
 var express = require('express');
 var app = express();
 var expressWs = require('express-ws')(app);
@@ -40,6 +42,7 @@ mongoClient
 		await ScraperDao.connDB(connection);
 		await UsersDao.connDB(connection);
 		await ReportDao.connDB(connection);
+		await FavoritesDao.connDB(connection);
 	});
 
 
@@ -53,10 +56,11 @@ app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/privileged-routes", scraperPriviligedRoutes);
 app.use("/api/v1/privileged-reports", reportRoutesLogged);
 app.use("/api/v1/reports", reportRoutes);
+app.use("/api/v1/privileged-favorites", favoriteRoutes);
 app.ws("/scraperMultiWs", (ws: any, req: any) => {
 	ws.on("message", (msg: any) => {
 		let jsonMsg = JSON.parse(msg);
-		UsersController.getRoleWs(jsonMsg).then( () => {
+		UsersController.getRoleWs(jsonMsg).then(() => {
 			ScraperController.scraperMulti(jsonMsg, ws).then((data: any) => {
 				ws.send(JSON.stringify({
 					data: data
@@ -68,7 +72,7 @@ app.ws("/scraperMultiWs", (ws: any, req: any) => {
 			}
 			);
 		})
-		
+
 	});
 	//ws.send("Hello");
 });

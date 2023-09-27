@@ -164,6 +164,29 @@ export default class UsersController {
             error: ""
         })
     }
+
+    static async getEmail(req: any): Promise<{}> {
+        let email = "";
+        await UsersDao.verifyToken(req.header('token')).then(async (response: {
+            success: boolean,
+            error: string,
+            data: jose.JWTPayload
+        }) => {
+            //console.log(req.header('token'));
+            if (response.success) {
+                let user: any = response.data.user;
+
+                email = user.email;
+            }
+        }).catch((e: any) => {
+            return Promise.reject(e)
+        })
+        return Promise.resolve({
+            success: true,
+            error: "",
+            email: email
+        })
+    }
     static async getRoleWs(msg: any): Promise<{}> {
         await UsersDao.verifyToken(msg.token).then(async (response: {
             success: boolean,

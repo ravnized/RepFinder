@@ -11,7 +11,7 @@ import { BsExclamationLg } from "react-icons/bs";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import "../css/ItemCard.css";
 import ReportServices from "../services/ReportServices";
-import {BsSearch} from "react-icons/bs";
+import { BsSearch } from "react-icons/bs";
 function ItemsCard(props: {
 	responseValue: never[];
 	statusResponse: string;
@@ -33,22 +33,21 @@ function ItemsCard(props: {
 		if (props.responseValue !== undefined) {
 			setItems(props.responseValue);
 		}
+		
 		if (props.statusResponse === "out") {
 			items.map((item: any, index: number): void => {
-				
-					tl.current.to(
-						`#cardEl${index}`,
-						{ opacity: 0, y: +100, duration: 0.5 },
-						`0.${index}`,
-					);
-				
-				if(index === items.length - 1) {
+				tl.current.to(
+					`#cardEl${index}`,
+					{ opacity: 0, y: +100, duration: 0.5 },
+					`0.${index}`,
+				);
+
+				if (index === items.length - 1) {
 					setTimeout(() => {
 						props.statusResponseGet("");
 					}, 500);
 				}
 			});
-			
 		}
 	}, [items, props, props.responseValue, props.statusResponse]);
 
@@ -188,9 +187,13 @@ function ItemsCard(props: {
 					</Container>
 				) : (
 					<Container>
-						<h4 style={{
-							padding: "3rem",
-						}}>Search Something <BsSearch /></h4>
+						<h4
+							style={{
+								padding: "3rem",
+							}}
+						>
+							Search Something <BsSearch />
+						</h4>
 					</Container>
 				)}
 			</div>

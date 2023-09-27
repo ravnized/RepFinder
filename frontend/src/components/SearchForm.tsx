@@ -8,7 +8,19 @@ import ItemsDataServices from "../services/ItemsServices";
 import Spinner from "react-bootstrap/Spinner";
 import "../css/SearchForm.css";
 
-function SearchForm(props: any) {
+function SearchForm(props: {
+	statusResponse: string;
+	statusGet: (status: string) => void;
+	resetPage: (
+		reset: boolean,
+		item: {
+			itemName: string;
+			cost: number;
+			selectorOperation: string;
+			storeName: string;
+		},
+	) => void;
+}) {
 	const valueSpinner = useRef(0);
 	const valueItemName = useRef("");
 	const valueSelector = useRef("$eq");
@@ -23,7 +35,6 @@ function SearchForm(props: any) {
 		let storenameList: any = [];
 		ItemsDataServices.getStoreNames()
 			.then((res: []) => {
-				
 				for (let i = 0; i < res.length; i++) {
 					let resi: any = res[i];
 					storenameList.push(resi._id);
@@ -108,13 +119,12 @@ function SearchForm(props: any) {
 								handleSubmit(e);
 								setStateButtonSearch("disabled");
 								props.statusGet("disabled");
-								props.getForm(
-									valueItemName.current,
-									valueSpinner.current,
-									valueSelector.current,
-									storeName.current,
-								);
-								props.resetPage(true);
+								props.resetPage(true, {
+									itemName: valueItemName.current,
+									cost: valueSpinner.current,
+									selectorOperation: valueSelector.current,
+									storeName: storeName.current,
+								});
 							}}
 						>
 							Search
