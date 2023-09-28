@@ -1,4 +1,5 @@
 import env from "react-dotenv";
+import FavouritesDataServices from "./FavouritesServices";
 
 class ItemsDataServices {
 	static async getAll(page = 0) {
@@ -17,8 +18,8 @@ class ItemsDataServices {
 		operator: string,
 		page: number,
 		storeName: string,
+		token: string = "",
 	) {
-		//let baseUrl = "http://127.0.0.1:5001/api/v1/items";
 		let finalUrl = `${env.URL_ITEMS}`;
 		finalUrl += `?page=${page}`;
 		if (cost !== 0) {
@@ -37,8 +38,11 @@ class ItemsDataServices {
 				"Content-Type": "application/json",
 			},
 		});
+		let favouritesItems = await FavouritesDataServices.getAll(token);
+		console.log(favouritesItems.favorites);
+		let responseItem = await response.json();
 
-		return response.json();
+		return { responseItem, favouritesItems };
 	}
 	static async getPopularity() {
 		let baseUrl = `${env.URL_ITEMS}/getPopularity`;

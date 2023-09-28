@@ -62,7 +62,8 @@
 			"URL_ITEMS",
 			"URL_PRIVILIGED",
 			"URL_REPORTS_PRIVILEGED",
-			"URL_USERS"
+			"URL_USERS",
+			"URL_FAVOURITES"
 		]
 	}
 }

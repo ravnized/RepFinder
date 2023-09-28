@@ -42,6 +42,15 @@ router.route("/getByUser").post((req: any, res: any) => {
     });
 });
 
+router.route("/getItems").post((req: any, res: any) => {
+    FavoritesController.getFavoriteByUserReturnItems(req, res.email).then((result: any) => {
+        res.status(200).json(result)
+    }
+    ).catch((err: any) => {
+        res.status(500).json(err)
+    });
+});
+
 
 
 export default router;

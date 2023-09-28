@@ -5,12 +5,15 @@ import SearchForm from "../components/SearchForm";
 import ButtonsForm from "../components/ButtonsForm";
 import "../css/SearchPage.css";
 import ItemsDataServices from "../services/ItemsServices";
-
+import { useCookies } from "react-cookie";
+import FavouritesDataServices from "../services/FavouritesServices";
 function SearchPage() {
 	const [items, setItems] = useState([]);
+	const [favouritesItems, setFavouritesItems] = useState({});
 	const [page, setPage] = useState(0);
 	const [status, setStatus] = useState("");
 	const [statusResponse, setStatusResponse] = useState("");
+	const [cookies] = useCookies(["token"]);
 	const [itemQuery, setItemQuery] = useState({
 		itemName: "",
 		cost: 0,
@@ -18,6 +21,30 @@ function SearchPage() {
 		page: 0,
 		storeName: "",
 	});
+
+	function addOrRemoveFavourite(action: boolean, itemId: string) {
+		if (action) {
+			FavouritesDataServices.addFavourite(cookies.token, itemId)
+				.then(() => {
+					FavouritesDataServices.getAll(cookies.token).then((res) => {
+						setFavouritesItems(res.favorites);
+					});
+				})
+				.catch((e) => {
+					console.log(e);
+				});
+		} else {
+			FavouritesDataServices.deleteFavourite(cookies.token, itemId)
+				.then(() => {
+					FavouritesDataServices.getAll(cookies.token).then((res) => {
+						setFavouritesItems(res.favorites);
+					});
+				})
+				.catch((e) => {
+					console.log(e);
+				});
+		}
+	}
 
 	function pageValue(page: number) {
 		setPage(page);
@@ -38,9 +65,11 @@ function SearchPage() {
 			selectorOperation,
 			page,
 			storeName,
+			cookies.token,
 		)
 			.then((res) => {
-				setItems(res.itemsList);
+				setItems(res.responseItem.itemsList);
+				setFavouritesItems(res.favouritesItems.favorites);
 				waitingResponse("");
 				setItemQuery({
 					itemName: itemName,
@@ -52,6 +81,7 @@ function SearchPage() {
 			})
 			.catch((e) => {
 				setItems([]);
+				setFavouritesItems({});
 				waitingResponse("");
 				setItemQuery({
 					itemName: itemName,
@@ -131,7 +161,11 @@ function SearchPage() {
 			)}
 			<ItemsCard
 				responseValue={items}
+				responseFavourites={favouritesItems}
 				statusResponse={statusResponse}
+				favouriteResponseGet={(action: boolean, itemName: string) =>
+					addOrRemoveFavourite(action, itemName)
+				}
 				statusResponseGet={(response) => responseOutIn(response)}
 			/>
 			{items !== undefined && items.length > 0 ? (

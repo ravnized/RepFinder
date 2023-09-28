@@ -66,6 +66,8 @@ export default class FavoritesDao {
             user: "",
             itemId: "",
         }];
+
+
         try {
             cursor = await favorites.find(query).limit(favoritesPerPage).skip(favoritesPerPage * page);
         } catch (e) {
@@ -75,6 +77,7 @@ export default class FavoritesDao {
         }
         try {
             favoritesList = await cursor.toArray();
+
         } catch (e) {
             return Promise.reject({
                 error: `Error in getting favorites: ${e}`
@@ -124,6 +127,7 @@ export default class FavoritesDao {
             user: "",
             itemId: "",
         }];
+        let favourites: { [key: string]: string } = {}
         try {
             cursor = await favorites.find(query);
         } catch (e) {
@@ -133,16 +137,63 @@ export default class FavoritesDao {
         }
         try {
             favoritesList = await cursor.toArray();
+            //transofrm to array key value
+
+            favoritesList.map((favorite: any) => {
+                let itemId = favorite.itemId
+
+                favourites[itemId] = favorite._id.toString();
+            })
+
+
+
         } catch (e) {
             return Promise.reject({
                 error: `Error in getting favorites: ${e}`
             })
         }
+
+
+        return Promise.resolve({
+            favorites: favourites
+        });
+    }
+
+
+    static async getFavoritesByUserPage(user: string, page: number, favoritesPerPage: number): Promise<any> {
+        let query = {
+            user: "",
+        }
+        query.user = user;
+        let cursor: any;
+        let favoritesList: [{}] = [{
+            user: "",
+            itemId: "",
+        }];
+        try {
+            cursor = await favorites.find(query);
+        } catch (e) {
+            return Promise.reject({
+                error: `Error in getting favorites: ${e}`
+            })
+        }
+        try {
+            favoritesList = await cursor.limit(favoritesPerPage).skip(favoritesPerPage * page).toArray();
+            //transofrm to array key value
+
+
+
+        } catch (e) {
+            return Promise.reject({
+                error: `Error in getting favorites: ${e}`
+            })
+        }
+
+
         return Promise.resolve({
             favorites: favoritesList
         });
     }
-
 
 
 

@@ -139,14 +139,15 @@ export default class ScraperDao {
     static async getItemByID(
         idItem: string
     ): Promise<{
-        _id: string;
-        itemName: string;
-        cost: number;
-        idItem: string;
-        image: string;
-        link: string;
-        storeName: string;
-        popularity: number;
+        _id: string,
+        itemName: string,
+        cost: number,
+        idItem: string,
+        image: string,
+        storeName: string,
+        popularity: number,
+        link: string,
+        blackList: boolean,
     }
     > {
 

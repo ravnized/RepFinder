@@ -12,10 +12,13 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import "../css/ItemCard.css";
 import ReportServices from "../services/ReportServices";
 import { BsSearch } from "react-icons/bs";
+import { MdFavorite } from "react-icons/md";
 function ItemsCard(props: {
 	responseValue: never[];
 	statusResponse: string;
+	responseFavourites: any;
 	statusResponseGet: (response: string) => void;
+	favouriteResponseGet: (action: boolean, itemName: string) => void;
 }) {
 	const [handle, setHandle] = React.useState(false);
 	const [idItem, setIdItem] = React.useState("");
@@ -23,8 +26,10 @@ function ItemsCard(props: {
 	const [itemCost, setItemCost] = React.useState(0);
 	const [needToBeDeleted, setNeedToBeDeleted] = React.useState(false);
 	const [_id, set_id] = React.useState("");
+	
 	let tl = useRef() as React.MutableRefObject<GSAPTimeline>;
 	const [items, setItems] = React.useState([]);
+	const [favourites, setFavourites] = React.useState([]);
 	useLayoutEffect(() => {
 		tl.current = gsap.timeline();
 	});
@@ -33,7 +38,13 @@ function ItemsCard(props: {
 		if (props.responseValue !== undefined) {
 			setItems(props.responseValue);
 		}
-		
+
+		if (props.responseFavourites !== undefined) {
+			setFavourites(props.responseFavourites);
+		}
+
+
+
 		if (props.statusResponse === "out") {
 			items.map((item: any, index: number): void => {
 				tl.current.to(
@@ -175,9 +186,50 @@ function ItemsCard(props: {
 												</ListGroup.Item>
 											</ListGroup>
 											<Card.Body>
-												<a href={item.link} target="_blank" rel="noreferrer">
-													<Button variant="primary">Go to the item</Button>
-												</a>
+												<Row>
+													<Col>
+														<a
+															href={item.link}
+															target="_blank"
+															rel="noreferrer"
+														>
+															<Button variant="primary">Go to the item</Button>
+														</a>
+													</Col>
+													<Col>
+														{favourites[item.idItem] !==
+														undefined ? (
+															<Button
+																style={{
+																	width: "100%",
+																}}
+																className="removeFavorite"
+																onClick={() => {
+																	console.log("delete");
+																	props.favouriteResponseGet(
+																		false,
+																		item.idItem,
+																	);
+																	
+																}}
+															>
+																Remove <MdFavorite />
+															</Button>
+														) : (
+															<Button
+																style={{
+																	width: "100%",
+																}}
+																className="addFavorite"
+																onClick={() => {
+																	props.favouriteResponseGet(true, item.idItem);
+																}}
+															>
+																Add <MdFavorite />
+															</Button>
+														)}
+													</Col>
+												</Row>
 											</Card.Body>
 										</Card>
 									</Col>

@@ -493,6 +493,7 @@ export default class ScraperController {
 
         })
         await Promise.all(itemsList.map(async (item: any) => {
+            console.log(item);
             if (item.image.slice(0, 4) !== "data") {
                 return await instance.get(item.image, {
                     responseType: 'arraybuffer',

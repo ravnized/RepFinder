@@ -1,7 +1,7 @@
 import env from "react-dotenv";
 class LoginDataServices {
 	static async getToken(email: string, password: string) {
-		let baseUrl = `${env.URL_USERS}login`;
+		let baseUrl = `${env.URL_USERS}/login`;
 		console.log(email);
 
 		let response = await fetch(baseUrl, {
@@ -18,7 +18,7 @@ class LoginDataServices {
 		return await response.json();
 	}
 	static async verifyToken(token: string) {
-		let baseUrl = `${env.URL_USERS}verifyToken`;
+		let baseUrl = `${env.URL_USERS}/verifyToken`;
 
 		let response = await fetch(baseUrl, {
 			method: "POST",
@@ -38,7 +38,7 @@ class RegisterDataServices {
 		name: string,
 		lastName: string,
 	) {
-		let baseUrl = `${env.URL_USERS}register`;
+		let baseUrl = `${env.URL_USERS}/register`;
 
 		let response = await fetch(baseUrl, {
 			method: "POST",
