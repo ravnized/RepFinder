@@ -96,7 +96,6 @@ export default class FavoritesController {
     }
 
     static async getFavoriteByUserReturnItems(req: any, email: string): Promise<{}> {
-        let itemsList: any[] = []
 
         let favoritesList:
             {
@@ -155,10 +154,6 @@ export default class FavoritesController {
             return Promise.reject(error.error);
         });
 
-
-
-
-
         await Promise.all(favoritesList.favorites.map(async (favorite: any) => {
             return await ScraperDao.getItemByID(favorite.itemId).then((res: any) => {
                 responseItems.itemsList.push(res);
@@ -179,12 +174,7 @@ export default class FavoritesController {
             return Promise.reject(error);
         })
 
-
-
-
         return Promise.resolve(responseItems);
-
-
 
     }
 

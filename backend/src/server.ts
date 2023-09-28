@@ -1,6 +1,5 @@
 
 import * as dotenv from "dotenv";
-
 import { MongoClient } from "mongodb";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -20,7 +19,6 @@ import FavoritesDao from "./dao/favoritesDao";
 var express = require('express');
 var app = express();
 var expressWs = require('express-ws')(app);
-
 
 declare var process: {
 	env: {
@@ -80,3 +78,4 @@ app.ws("/scraperMultiWs", (ws: any, req: any) => {
 app.use("*", (req: any, res: any) => {
 	res.status(404).json({ error: "not found" });
 });
+

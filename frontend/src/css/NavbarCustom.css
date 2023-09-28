@@ -9,6 +9,10 @@
 	border-radius: 0.25rem;
 	transition: all 0.2s ease-in;
 }
+.navBarLink:hover {
+	color: grey;
+	transition: all 0.2s ease-in;
+}
 
 .repFinderBrand {
 	font-family: "Raleway", sans-serif;

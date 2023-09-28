@@ -44,6 +44,20 @@ class FavouritesDataServices {
 
 		return response.json();
 	}
+
+	static async getItems(token: string, page = 0, itemsPerPage = 10) {
+		let baseUrl = `${env.URL_FAVOURITES}/getItems?page=${page}&itemsPerPage=${itemsPerPage}`;
+
+		let response = await fetch(baseUrl, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				token: token,
+			},
+		});
+
+		return response.json();
+	}
 }
 
 export default FavouritesDataServices;

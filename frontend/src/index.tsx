@@ -12,6 +12,7 @@ import LoginRoute from "./components/LoginRoute";
 import RegisterPage from "./pages/RegisterPage";
 import DashBoard from "./pages/DashBoard";
 import Logout from "./pages/Logout";
+import Favourites from "./pages/Favourites";
 
 const router = createBrowserRouter([
 	{
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
 			{
 				path: "dashboard/",
 				element: <DashBoard />,
+			},
+			{
+				path: "favourites/",
+				element: <Favourites />,
 			},
 		],
 	},

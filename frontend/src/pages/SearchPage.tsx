@@ -167,6 +167,7 @@ function SearchPage() {
 					addOrRemoveFavourite(action, itemName)
 				}
 				statusResponseGet={(response) => responseOutIn(response)}
+				voidPageString={"Search Something"}
 			/>
 			{items !== undefined && items.length > 0 ? (
 				<ButtonsForm

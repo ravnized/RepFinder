@@ -1,20 +1,30 @@
 import { useEffect, useState } from "react";
+import { Nav } from "react-bootstrap";
 import { withCookies } from "react-cookie";
+import { LinkContainer } from "react-router-bootstrap";
 import { Link } from "react-router-dom";
+import "../css/NavbarCustom.css";
 
 function TokenChecker(props: any) {
 	const { cookies } = props;
 	let [token, setToken] = useState(cookies.get("token") || "");
-
 	useEffect(() => {
 		setToken(cookies.get("token") || "");
 	}, [cookies]);
 
 	if (token === "" && !props.invert) {
-		return <Link className="navBarLink" to={`/${props.link}`}>{props.name}</Link>;
+		return (
+			<LinkContainer to={`/${props.link}`}>
+				<Nav.Link>{props.name}</Nav.Link>
+			</LinkContainer>
+		);
 	} else if (token !== "" && props.invert) {
-		return <Link className="navBarLink" to={`/${props.link}`}>{props.name}</Link>;
+		return (
+			<LinkContainer to={`/${props.link}`}>
+				<Nav.Link>{props.name}</Nav.Link>
+			</LinkContainer>
+		);
 	}
-	return <div></div>;
+	return <></>;
 }
 export default withCookies(TokenChecker);

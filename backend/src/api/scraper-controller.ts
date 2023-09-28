@@ -7,6 +7,8 @@ const Agent = require("agentkeepalive");
 import UserAgent from 'user-agents';
 import { forEach } from "async";
 import { Response } from "express";
+const { exec } = require("child_process");
+var Docker = require('dockerode');
 export default class ScraperController {
 
     /**
@@ -46,6 +48,25 @@ export default class ScraperController {
     }
 
 
+    static async getContainer() {
+        const docker = new Docker();
+        const serviceName = 'puppeteer';
+
+        // Use Dockerode to inspect the service container
+        docker.getContainer(serviceName).inspect((err: any, containerInfo: any) => {
+            if (err) {
+                console.error(`Error inspecting container ${serviceName}: ${err.message}`);
+                return;
+            }
+
+            // Extract information about the container, such as its IP address
+            const ipAddress = containerInfo.NetworkSettings.Networks.bridge.IPAddress;
+
+            // Now you can use ipAddress to access the Puppeteer service
+            console.log(`Accessing Puppeteer service at http://${ipAddress}:5002`);
+        });
+    }
+
     /**
      * 
      * @param url string of the url to scrape es: https://chaosmade.x.yupoo.com/albums
@@ -58,6 +79,16 @@ export default class ScraperController {
         pageMax = 0;
         let count = 0;
         let countForProgess = 0;
+
+        await this.getContainer();
+
+
+
+
+
+
+
+
         let browser = await puppeteer.connect({ browserWSEndpoint: 'ws:puppeteer:5002' }).catch((e: any) => {
             console.log(`error in browser ${e}`);
         });
@@ -106,6 +137,9 @@ export default class ScraperController {
             count++;
 
         } while (urls.length)
+
+
+
 
         return Promise.resolve({
             message: `Finito ${filename}`
@@ -493,7 +527,6 @@ export default class ScraperController {
 
         })
         await Promise.all(itemsList.map(async (item: any) => {
-            console.log(item);
             if (item.image.slice(0, 4) !== "data") {
                 return await instance.get(item.image, {
                     responseType: 'arraybuffer',

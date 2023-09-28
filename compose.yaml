@@ -27,13 +27,14 @@ services:
       - CONNECTION_TIMEOUT=-1
       - DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true
       - ALLOW_FILE_PROTOCOL=true
+    profiles:
+      - donotstart
   frontend:
     build: "./frontend/"
     ports:
       - "3000:3000"
     depends_on:
       - backend
-      - puppeteer
     volumes:
       - ./frontend/src:/codeFrontend/src
       - ./frontend/public:/codeFrontend/public

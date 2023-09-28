@@ -19,6 +19,7 @@ function ItemsCard(props: {
 	responseFavourites: any;
 	statusResponseGet: (response: string) => void;
 	favouriteResponseGet: (action: boolean, itemName: string) => void;
+	voidPageString : string;
 }) {
 	const [handle, setHandle] = React.useState(false);
 	const [idItem, setIdItem] = React.useState("");
@@ -244,7 +245,8 @@ function ItemsCard(props: {
 								padding: "3rem",
 							}}
 						>
-							Search Something <BsSearch />
+							{props.voidPageString} <BsSearch />
+							
 						</h4>
 					</Container>
 				)}

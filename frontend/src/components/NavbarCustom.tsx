@@ -4,6 +4,7 @@ import Navbar from "react-bootstrap/Navbar";
 import { Link } from "react-router-dom";
 import TokenChecker from "./CookieChecker";
 import "../css/NavbarCustom.css";
+import { LinkContainer } from "react-router-bootstrap";
 function NavbarCustom() {
 	return (
 		<div className="navbar-main">
@@ -15,20 +16,23 @@ function NavbarCustom() {
 				expand="lg"
 			>
 				<Container>
-					<Link to={"/"} className="repFinderLink">
+					<LinkContainer to="/" className="repFinderLink">
 						<Navbar.Brand className="repFinderBrand">RepFinder</Navbar.Brand>
-					</Link>
+					</LinkContainer>
 
 					<Navbar.Toggle aria-controls="responsive-navbar-nav" />
 					<Navbar.Collapse id="responsive-navbar-nav">
 						<Nav className="me-auto justify-content-end flex-grow-1 pe-3 navCustom">
-							<Link className="navBarLink" to={"/"}>
-								HOME
-							</Link>
-							<Link className="navBarLink" to={"/search"}>
-								SEARCH
-							</Link>
+							<LinkContainer to="/" className="repFinderLink">
+								<Nav.Link>HOME</Nav.Link>
+							</LinkContainer>
+
+							<LinkContainer to="/search" className="repFinderLink">
+								<Nav.Link>SEARCH</Nav.Link>
+							</LinkContainer>
+
 							<TokenChecker invert={true} name="DASHBOARD" link="dashboard" />
+							<TokenChecker invert={true} name="FAVOURITES" link="favourites" />
 							<TokenChecker invert={false} name="REGISTER" link="register" />
 							<TokenChecker invert={false} name="LOGIN" link="login" />
 							<TokenChecker invert={true} name="LOGOUT" link="logout" />

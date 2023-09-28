@@ -42,7 +42,7 @@ router.route("/getByUser").post((req: any, res: any) => {
     });
 });
 
-router.route("/getItems").post((req: any, res: any) => {
+router.route("/getItems").get((req: any, res: any) => {
     FavoritesController.getFavoriteByUserReturnItems(req, res.email).then((result: any) => {
         res.status(200).json(result)
     }
