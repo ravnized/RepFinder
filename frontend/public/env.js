@@ -3,5 +3,6 @@ window.env = {
   "URL_PRIVILIGED": "http://localhost:5001/api/v1/privileged-routes",
   "URL_REPORTS_PRIVILEGED": "http://localhost:5001/api/v1/privileged-reports",
   "URL_USERS": "http://localhost:5001/api/v1/users",
-  "URL_FAVOURITES": "http://localhost:5001/api/v1/privileged-favorites"
+  "URL_FAVOURITES": "http://localhost:5001/api/v1/privileged-favorites",
+  "URL_REPORTS": "http://localhost:5001/api/v1/reports"
 };

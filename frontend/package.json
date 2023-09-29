@@ -64,7 +64,8 @@
 			"URL_PRIVILIGED",
 			"URL_REPORTS_PRIVILEGED",
 			"URL_USERS",
-			"URL_FAVOURITES"
+			"URL_FAVOURITES",
+			"URL_REPORTS"
 		]
 	},
 	"devDependencies": {

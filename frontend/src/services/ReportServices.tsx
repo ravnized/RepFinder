@@ -23,7 +23,7 @@ class ReportServices {
 		itemName: string,
 		needToBeDeleted: boolean,
 	) {
-		let baseUrl = `${env.URL_REPORTS_PRIVILEGED}/insert`;
+		let baseUrl = `${env.URL_REPORTS}/insert`;
 		let req = await fetch(baseUrl, {
 			method: "POST",
 			headers: {
