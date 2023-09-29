@@ -18,6 +18,18 @@ export default class ScraperController {
      */
     static async scraperMulti(arrayInfo: { scraper: [{ url: string, filename: string }] }, ws: any): Promise<{}> {
         //console.log(arrayInfo);
+        let docker = new Docker({ socketPath: '/var/run/docker.sock' });
+        await docker.getContainer('puppeteer').start().then(() => {
+            console.log("puppeteer container started");
+        }).catch((e: any) => {
+            console.log(`error in start container ${e}`);
+            return Promise.reject(e);
+        })
+        //wait 10 seconds to start the scraper
+        await new Promise(resolve => setTimeout(resolve, 10000));
+
+
+
         await Promise.all(arrayInfo.scraper.map(async (data: { url: string, filename: string }) => {
             return await this.scraperMain(data.url, data.filename, ws).catch((err: any) => {
                 return Promise.reject(err)
@@ -25,6 +37,14 @@ export default class ScraperController {
         })).catch((err: any) => {
             return Promise.reject(err)
         })
+
+        await docker.getContainer('puppeteer').stop().then(() => {
+            console.log("puppeteer container stopped");
+        }).catch((e: any) => {
+            console.log(`error in stop container ${e}`);
+            return Promise.reject(e);
+        })
+
 
         return Promise.resolve({ message: "Scraping completed" })
     }
@@ -46,26 +66,72 @@ export default class ScraperController {
         return Promise.resolve(arrayFinal);
 
     }
+    /*
+    
+        static async removeContainer(docker: any): Promise<{}> {
+            let container = docker.getContainer('puppeteer');
+            if(container == null) return Promise.resolve({
+                message: "Container not found"
+            })
+            await container.stop().catch((e: any) => {
+                console.log(`error in stop container ${e}`);
+                return Promise.reject(e);
+            })
+            await container.remove().catch((e: any) => {
+                console.log(`error in remove container ${e}`);
+                return Promise.reject(e);
+            })
+            return Promise.resolve({
+                message: "Container removed"
+            })
+        }
+    
+    
+        static async startContainer(docker: any): Promise<{}> {
+    
+            const container = await docker.createContainer({
+                Image: 'browserless/chrome',
+                name: 'puppeteer',
+                Tty: true,
+                HostConfig: {
+                    PortBindings: {
+                        '5002/tcp': [
+                            {
+                                HostPort: '5002',
+                            },
+                        ],
+                    },
+                },
+                ExposedPorts: {
+                    '5002/tcp': {},
+                },
+                Env: [
+                    "PORT=5002", "CONNECTION_TIMEOUT=-1", "DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true", "ALLOW_FILE_PROTOCOL=true"
+                ]
+            }).catch((e: any) => {
+                console.log(`error in create container ${e}`);
+                return Promise.reject(e);
+            })
+    
+            await container.start().catch((e: any) => {
+                console.log(`error in start container ${e}`);
+                return Promise.reject(e);
+            })
+            return Promise.resolve({
+                message: "Container started"
+            })
+    
+    
+    
+    
+        }
+    
+        */
 
 
-    static async getContainer() {
-        const docker = new Docker();
-        const serviceName = 'puppeteer';
 
-        // Use Dockerode to inspect the service container
-        docker.getContainer(serviceName).inspect((err: any, containerInfo: any) => {
-            if (err) {
-                console.error(`Error inspecting container ${serviceName}: ${err.message}`);
-                return;
-            }
 
-            // Extract information about the container, such as its IP address
-            const ipAddress = containerInfo.NetworkSettings.Networks.bridge.IPAddress;
 
-            // Now you can use ipAddress to access the Puppeteer service
-            console.log(`Accessing Puppeteer service at http://${ipAddress}:5002`);
-        });
-    }
 
     /**
      * 
@@ -80,7 +146,8 @@ export default class ScraperController {
         let count = 0;
         let countForProgess = 0;
 
-        await this.getContainer();
+
+
 
 
 

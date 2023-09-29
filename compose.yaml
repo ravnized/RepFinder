@@ -5,12 +5,14 @@ services:
       - "5001:5001"
     depends_on:
       - mongo
+      - puppeteer
     environment:
       - MONGODB_URI=mongodb://mongo:27017
       - NODE_OPTIONS="--max-old-space-size=8192"
     volumes:
       - ./backend/src:/code/src
       - ./backend/cache:/code/cache
+      - /var/run/docker.sock:/var/run/docker.sock
   mongo:
     image: "mongo"
     ports:
@@ -20,6 +22,7 @@ services:
     command: ["--quiet", "--logpath", "/var/log/mongodb/mongod.log"]
   puppeteer:
     image: browserless/chrome
+    container_name: puppeteer
     ports:
       - "5002:5002"
     environment:
@@ -27,8 +30,6 @@ services:
       - CONNECTION_TIMEOUT=-1
       - DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true
       - ALLOW_FILE_PROTOCOL=true
-    profiles:
-      - donotstart
   frontend:
     build: "./frontend/"
     ports:

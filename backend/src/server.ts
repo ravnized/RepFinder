@@ -19,6 +19,7 @@ import FavoritesDao from "./dao/favoritesDao";
 var express = require('express');
 var app = express();
 var expressWs = require('express-ws')(app);
+var Docker = require('dockerode');
 
 declare var process: {
 	env: {
@@ -41,6 +42,10 @@ mongoClient
 		await UsersDao.connDB(connection);
 		await ReportDao.connDB(connection);
 		await FavoritesDao.connDB(connection);
+		let docker = new Docker({ socketPath: '/var/run/docker.sock' });
+		await docker.getContainer('puppeteer').stop( () => {
+			console.log("puppeteer container stopped");
+		})
 	});
 
 
@@ -79,3 +84,4 @@ app.use("*", (req: any, res: any) => {
 	res.status(404).json({ error: "not found" });
 });
 
+// get docker container and start
