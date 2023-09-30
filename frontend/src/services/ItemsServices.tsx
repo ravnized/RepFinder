@@ -38,8 +38,11 @@ class ItemsDataServices {
 				"Content-Type": "application/json",
 			},
 		});
-		let favouritesItems = await FavouritesDataServices.getAll(token);
-		console.log(favouritesItems.favorites);
+		let favouritesItems = [];
+		if (token !== "") {
+			favouritesItems = await FavouritesDataServices.getAll(token);
+		}
+
 		let responseItem = await response.json();
 
 		return { responseItem, favouritesItems };

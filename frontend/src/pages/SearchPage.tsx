@@ -23,6 +23,9 @@ function SearchPage() {
 	});
 
 	function addOrRemoveFavourite(action: boolean, itemId: string) {
+		if(cookies.token === undefined){
+			return;
+		}
 		if (action) {
 			FavouritesDataServices.addFavourite(cookies.token, itemId)
 				.then(() => {

@@ -5,8 +5,23 @@ import { Accordion, Col, Container, Row } from "react-bootstrap";
 import { BsGithub } from "react-icons/bs";
 function WelcomePage() {
 	let tl = useRef() as React.MutableRefObject<GSAPTimeline>;
+	let [translate, setTranslate] = React.useState(0);
 	useLayoutEffect(() => {
 		tl.current = gsap.timeline();
+	});
+
+	function resize() {
+		let width = window.innerWidth;
+		width = width / 100;
+		setTranslate(width);
+	}
+
+	window.addEventListener("resize", resize);
+
+	useLayoutEffect(() => {
+		if (translate === 0) {
+			resize();
+		}
 	});
 
 	return (
@@ -72,20 +87,20 @@ function WelcomePage() {
 						</Accordion>
 					</Col>
 				</Row>
-
-				<div className="blob">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="-16.236 -52.2935 34.02 48.53"
-						preserveAspectRatio="none"
-					>
-						<path
-							fill="#0B1354"
-							d="M 0 0 H -20 C -20 -6.667 -20 -20 -10 -20 C 0 -20 0 -30 10 -30 C 20 -30 20 -20 20 -20 V 0 H 0"
-						></path>
-					</svg>
-				</div>
 			</Container>
+			<div className="blob">
+				<svg
+					style={{ transform: `translate(0, -${translate}%)` }}
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="-16.236 -52.2935 34.02 48.53"
+					preserveAspectRatio="xMidYMid"
+				>
+					<path
+						fill="#0B1354"
+						d="M 0 0 H -20 C -20 -6.667 -20 -20 -10 -20 C 0 -20 0 -30 10 -30 C 20 -30 20 -20 20 -20 V 0 H 0"
+					></path>
+				</svg>
+			</div>
 		</>
 	);
 }

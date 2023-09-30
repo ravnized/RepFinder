@@ -13,13 +13,15 @@ import "../css/ItemCard.css";
 import ReportServices from "../services/ReportServices";
 import { BsSearch } from "react-icons/bs";
 import { MdFavorite } from "react-icons/md";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { useCookies } from "react-cookie";
 function ItemsCard(props: {
 	responseValue: never[];
 	statusResponse: string;
 	responseFavourites: any;
 	statusResponseGet: (response: string) => void;
 	favouriteResponseGet: (action: boolean, itemName: string) => void;
-	voidPageString : string;
+	voidPageString: string;
 }) {
 	const [handle, setHandle] = React.useState(false);
 	const [idItem, setIdItem] = React.useState("");
@@ -27,7 +29,7 @@ function ItemsCard(props: {
 	const [itemCost, setItemCost] = React.useState(0);
 	const [needToBeDeleted, setNeedToBeDeleted] = React.useState(false);
 	const [_id, set_id] = React.useState("");
-	
+	const [cookies] = useCookies(["token"]);
 	let tl = useRef() as React.MutableRefObject<GSAPTimeline>;
 	const [items, setItems] = React.useState([]);
 	const [favourites, setFavourites] = React.useState([]);
@@ -43,8 +45,6 @@ function ItemsCard(props: {
 		if (props.responseFavourites !== undefined) {
 			setFavourites(props.responseFavourites);
 		}
-
-
 
 		if (props.statusResponse === "out") {
 			items.map((item: any, index: number): void => {
@@ -62,6 +62,12 @@ function ItemsCard(props: {
 			});
 		}
 	}, [items, props, props.responseValue, props.statusResponse]);
+
+	const renderTooltip = (props: any) => (
+		<Tooltip id="button-tooltip" {...props}>
+			You need to log in to add a favourite item
+		</Tooltip>
+	);
 
 	return (
 		<>
@@ -198,36 +204,55 @@ function ItemsCard(props: {
 														</a>
 													</Col>
 													<Col>
-														{favourites[item.idItem] !==
-														undefined ? (
-															<Button
-																style={{
-																	width: "100%",
-																}}
-																className="removeFavorite"
-																onClick={() => {
-																	console.log("delete");
-																	props.favouriteResponseGet(
-																		false,
-																		item.idItem,
-																	);
-																	
-																}}
+														{cookies.token === undefined ? (
+															<OverlayTrigger
+																placement="bottom"
+																overlay={renderTooltip}
 															>
-																Remove <MdFavorite />
-															</Button>
+																<Button
+																	style={{
+																		width: "100%",
+																	}}
+																	className="addFavorite"
+																>
+																	Add
+																</Button>
+															</OverlayTrigger>
 														) : (
-															<Button
-																style={{
-																	width: "100%",
-																}}
-																className="addFavorite"
-																onClick={() => {
-																	props.favouriteResponseGet(true, item.idItem);
-																}}
-															>
-																Add <MdFavorite />
-															</Button>
+															<>
+																{favourites[item.idItem] !== undefined ? (
+																	<Button
+																		style={{
+																			width: "100%",
+																		}}
+																		className="removeFavorite"
+																		onClick={() => {
+																			console.log("delete");
+																			props.favouriteResponseGet(
+																				false,
+																				item.idItem,
+																			);
+																		}}
+																	>
+																		Remove <MdFavorite />
+																	</Button>
+																) : (
+																	<Button
+																		style={{
+																			width: "100%",
+																		}}
+																		className="addFavorite"
+																		onClick={() => {
+																			props.favouriteResponseGet(
+																				true,
+																				item.idItem,
+																			);
+																		}}
+																	>
+																		Add <MdFavorite />
+																	</Button>
+																)}
+															</>
 														)}
 													</Col>
 												</Row>
@@ -246,7 +271,6 @@ function ItemsCard(props: {
 							}}
 						>
 							{props.voidPageString} <BsSearch />
-							
 						</h4>
 					</Container>
 				)}
